@@ -338,11 +338,12 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id, itemType, (item as Task | undefined)?.assigneeId]);
 
-  const executeSave = useCallback(async () => {
+  const executeSave = useCallback(async (): Promise<string | null> => {
+    let savedDisplayId: string | null = null;
     const isEmpty = !title.trim() && !content.trim();
 
     if (isSaving) {
-      return;
+      return null;
     }
 
     setIsSaving(true);
@@ -353,7 +354,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         // 既存アイテム更新
         if (isEmpty) {
           // 空アイテムの場合は保存しない（保存ボタンが無効化されるため、ここには到達しないはず）
-          return;
+          return null;
         }
 
         // アイテム内容の変更があるかチェック（ボード変更は除く）
@@ -546,7 +547,9 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             onDeleteAndSelectNext
           ) {
             onDeleteAndSelectNext(updatedItem);
-            return;
+            savedDisplayId =
+              (updatedItem as Task | Memo | null)?.displayId ?? null;
+            return savedDisplayId;
           }
         }
 
@@ -564,6 +567,10 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         }
 
         onSaveComplete?.(updatedItem, false, false);
+        savedDisplayId =
+          (updatedItem as Task | Memo | null)?.displayId ??
+          (item as Task | Memo | null)?.displayId ??
+          null;
       } else {
         // 新規アイテム作成（空の場合は何もしない）
         if (!isEmpty) {
@@ -678,6 +685,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           }
 
           onSaveComplete?.(createdItem, false, true);
+          savedDisplayId =
+            (createdItem as Task | Memo | null)?.displayId ?? null;
         } else {
           // 空の新規アイテムは単に閉じる
           const emptyItem =
@@ -699,6 +708,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   status: "todo" as const,
                 } as T);
           onSaveComplete?.(item || emptyItem, true, true);
+          savedDisplayId = null;
         }
       }
 
@@ -725,6 +735,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         setIsSaving(false);
       }, 400);
     }
+
+    return savedDisplayId;
   }, [
     item,
     itemType,
@@ -759,7 +771,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     teamId,
   ]);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = useCallback(async (): Promise<string | null> => {
     // ボードを外す場合のみモーダルを表示
     if (item?.id) {
       const boardsToAdd = selectedBoardIds.filter(
@@ -772,12 +784,12 @@ export function useSimpleItemSave<T extends UnifiedItem>({
       if (boardsToRemove.length > 0) {
         setPendingBoardChanges({ boardsToAdd, boardsToRemove });
         setShowBoardChangeModal(true);
-        return;
+        return null;
       }
     }
 
     // モーダル表示なしで保存実行
-    await executeSave();
+    return await executeSave();
   }, [item, selectedBoardIds, currentBoardIds, executeSave]);
 
   const handleTitleChange = useCallback((newTitle: string) => {

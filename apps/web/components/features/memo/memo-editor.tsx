@@ -894,18 +894,14 @@ function MemoEditor({
         }
       } else {
         // 通常の保存処理
-        await handleSave();
+        const savedDisplayId = await handleSave();
 
         // 保存後の処理用のoriginalIdを取得
         targetId =
-          memo && memo.id > 0
-            ? teamMode
-              ? (memo?.displayId ?? memo.displayId ?? null)
-              : (memo?.displayId ?? null)
-            : null;
-        if (!targetId && lastSavedMemoRef.current) {
-          targetId = lastSavedMemoRef.current?.displayId ?? null;
-        }
+          savedDisplayId ||
+          (memo && memo.id > 0 ? (memo?.displayId ?? null) : null) ||
+          lastSavedMemoRef.current?.displayId ||
+          null;
       }
 
       // 保存後、タグも更新

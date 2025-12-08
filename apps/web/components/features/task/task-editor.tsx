@@ -1060,37 +1060,35 @@ function TaskEditor({
     const wasNewTask = isNewTask;
     const hasContent = title.trim() || description.trim();
 
-    await saveTask();
+    const savedDisplayId = await saveTask();
 
     // 保存後の処理用のoriginalIdを取得
     let targetId =
-      task && task.id > 0
-        ? teamMode
-          ? (task.displayId ?? task.displayId)
-          : task.displayId
-        : null;
+      savedDisplayId || (task && task.id > 0 ? (task.displayId ?? null) : null);
 
     // 新規作成の場合、タグまたは画像がある場合は最新タスクを取得
     if (wasNewTask && (localTags.length > 0 || pendingImages.length > 0)) {
       // 新規作成でタグまたは画像がある場合
-      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (!targetId) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const tasksQueryKey = teamMode
-        ? (["team-tasks", teamId] as const)
-        : (["tasks"] as const);
-      const tasksQuery = queryClient.getQueryData<Task[]>(tasksQueryKey);
-      if (tasksQuery && tasksQuery.length > 0) {
-        const latestTask = [...tasksQuery].sort(
-          (a, b) => b.createdAt - a.createdAt,
-        )[0];
+        const tasksQueryKey = teamMode
+          ? (["team-tasks", teamId] as const)
+          : (["tasks"] as const);
+        const tasksQuery = queryClient.getQueryData<Task[]>(tasksQueryKey);
+        if (tasksQuery && tasksQuery.length > 0) {
+          const latestTask = [...tasksQuery].sort(
+            (a, b) => b.createdAt - a.createdAt,
+          )[0];
 
-        if (latestTask) {
-          targetId =
-            (teamMode ? latestTask.displayId : latestTask.displayId) || "";
-          if (localTags.length > 0) {
-            await updateTaggings(targetId);
+          if (latestTask) {
+            targetId = latestTask.displayId || "";
           }
         }
+      }
+
+      if (targetId && localTags.length > 0) {
+        await updateTaggings(targetId);
       }
     } else if (hasTagChanges && task && task.id !== 0) {
       // タグの変更がある場合は保存（既存タスク）

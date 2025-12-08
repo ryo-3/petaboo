@@ -372,6 +372,23 @@ export default function CommentSection({
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // メニュー外クリックで閉じる
+  useEffect(() => {
+    if (openMenuId === null) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openMenuId]);
 
   // コメント表示範囲変更時にlocalStorageに保存
   const handleScopeChange = (scope: "board" | "items") => {
@@ -723,6 +740,7 @@ export default function CommentSection({
                 >
                   {isOwner && (
                     <div
+                      ref={openMenuId === comment.id ? menuRef : undefined}
                       className="absolute top-2 right-2"
                       onClick={(e) => e.stopPropagation()}
                     >

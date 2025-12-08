@@ -273,12 +273,12 @@ export default function AttachmentGallery({
                       src={imageUrl}
                       alt={attachment.fileName}
                       draggable={false}
-                      className={`w-full md:w-48 h-auto md:h-48 md:object-cover rounded-lg ${
+                      className={`w-full md:min-w-32 md:max-w-80 md:min-h-32 md:max-h-64 object-contain rounded-lg ${
                         isProcessing
-                          ? "opacity-50 cursor-default"
+                          ? "opacity-50 cursor-default border border-gray-300"
                           : isMarkedForDelete
                             ? "opacity-50 border-2 border-red-400 cursor-pointer hover:opacity-80 transition-opacity"
-                            : "cursor-pointer hover:opacity-80 transition-opacity"
+                            : "cursor-pointer hover:opacity-80 transition-opacity border border-gray-300"
                       }`}
                       onClick={() =>
                         !isProcessing && setSelectedImage(imageUrl)
@@ -286,7 +286,7 @@ export default function AttachmentGallery({
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="w-32 h-32 md:w-48 md:h-48 bg-gray-200 rounded-lg flex items-center justify-center">
                       <span className="text-xs text-gray-500">読込中...</span>
                     </div>
                   )
@@ -529,9 +529,9 @@ export default function AttachmentGallery({
                     src={url}
                     alt={`保存待ち ${index + 1}`}
                     draggable={false}
-                    className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg transition-opacity ${
+                    className={`w-full md:min-w-24 md:max-w-64 md:min-h-24 md:max-h-48 object-contain rounded-lg transition-opacity ${
                       isUploading
-                        ? "opacity-50"
+                        ? "opacity-50 border border-gray-300"
                         : "cursor-pointer hover:opacity-80 border-2 border-blue-400"
                     }`}
                     onClick={() => !isUploading && setSelectedImage(url)}

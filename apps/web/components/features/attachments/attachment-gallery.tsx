@@ -273,7 +273,7 @@ export default function AttachmentGallery({
                       src={imageUrl}
                       alt={attachment.fileName}
                       draggable={false}
-                      className={`w-full md:w-32 h-auto md:h-32 md:object-cover rounded-lg ${
+                      className={`w-full md:w-48 h-auto md:h-48 md:object-cover rounded-lg ${
                         isProcessing
                           ? "opacity-50 cursor-default"
                           : isMarkedForDelete
@@ -286,7 +286,7 @@ export default function AttachmentGallery({
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
                       <span className="text-xs text-gray-500">読込中...</span>
                     </div>
                   )
@@ -295,7 +295,7 @@ export default function AttachmentGallery({
                     type="button"
                     disabled={isProcessing}
                     onClick={() => !isProcessing && handleFileOpen(attachment)}
-                    className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                    className={`w-48 h-48 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
                       isProcessing
                         ? "opacity-50 cursor-default"
                         : isMarkedForDelete
@@ -319,7 +319,7 @@ export default function AttachmentGallery({
                     type="button"
                     disabled={isProcessing}
                     onClick={() => !isProcessing && handleFileOpen(attachment)}
-                    className={`w-32 h-32 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
+                    className={`w-48 h-48 bg-gray-100 rounded-lg flex flex-col items-center justify-center p-2 ${
                       isProcessing
                         ? "opacity-50 cursor-default"
                         : isMarkedForDelete
@@ -547,7 +547,7 @@ export default function AttachmentGallery({
               ) : isPdf ? (
                 <div className="relative">
                   <div
-                    className={`w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
+                    className={`w-48 h-48 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
                       isUploading ? "opacity-50" : ""
                     }`}
                   >
@@ -571,7 +571,7 @@ export default function AttachmentGallery({
               ) : (
                 <div className="relative">
                   <div
-                    className={`w-32 h-32 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
+                    className={`w-48 h-48 bg-gray-100 rounded-lg border-2 border-blue-400 flex flex-col items-center justify-center p-2 ${
                       isUploading ? "opacity-50" : ""
                     }`}
                   >

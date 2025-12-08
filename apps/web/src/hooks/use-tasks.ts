@@ -45,12 +45,14 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
       refetchOnWindowFocus: false,
       refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
       enabled: teamMode ? Boolean(teamId) : true,
-      placeholderData: [], // 初回も即座に空配列を表示
+      // PETABOO-55: placeholderDataを削除 - teamId未確定時に空配列を返さないようにする
+      // placeholderData: [], を削除
       keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
-      ...(teamMode && {
-        refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-        refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
-      }),
+      ...(teamMode &&
+        teamId && {
+          refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+          refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+        }),
     },
   );
 }
@@ -552,12 +554,13 @@ export function useDeletedTasks(options?: {
       refetchOnWindowFocus: false,
       refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
       enabled: teamMode ? Boolean(teamId) : true,
-      placeholderData: [], // 初回も即座に空配列を表示
+      // PETABOO-55: placeholderDataを削除 - teamId未確定時に空配列を返さないようにする
       keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
-      ...(teamMode && {
-        refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-        refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
-      }),
+      ...(teamMode &&
+        teamId && {
+          refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+          refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+        }),
     },
   );
 }

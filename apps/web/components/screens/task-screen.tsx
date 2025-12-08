@@ -225,6 +225,23 @@ function TaskScreen({
     error: Error | null;
   };
 
+  // PETABOO-55 デバッグ: タスク一覧が異常な時のみログ出力
+  if (
+    teamMode &&
+    teamId &&
+    tasks !== undefined &&
+    tasks.length === 0 &&
+    !taskLoading
+  ) {
+    console.warn("🔴 PETABOO-55: チームタスク一覧が空", {
+      teamMode,
+      teamId,
+      tasksCount: 0,
+      isLoading: taskLoading,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   const { data: deletedTasks, isLoading: deletedTasksLoading } =
     useDeletedTasks({ teamMode, teamId });
 

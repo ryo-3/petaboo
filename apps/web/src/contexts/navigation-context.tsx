@@ -183,8 +183,27 @@ export function NavigationProvider({
 
   const searchParams = useSearchParams();
 
+  // PETABOO-55: SSR/CSRのハイドレーション不整合を防ぐため、マウント状態を追跡
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   // Sidebarの詳細なiconStates計算ロジック（統一版・最適化・楽観的更新対応）
   const iconStates = useMemo((): IconStates => {
+    // PETABOO-55: SSR時は全部falseを返す（ハイドレーション不整合を防ぐ）
+    if (!isMounted) {
+      return {
+        home: false,
+        memo: false,
+        task: false,
+        board: false,
+        boardDetail: false,
+        search: false,
+        settings: false,
+        team: false,
+      };
+    }
     // URLパターンの早期判定
     const isTeamDetailPageUrl =
       pathname.startsWith("/team/") && pathname !== "/team";
@@ -360,6 +379,7 @@ export function NavigationProvider({
 
     return result;
   }, [
+    isMounted, // PETABOO-55: マウント状態を依存配列に追加
     screenMode,
     currentMode,
     pathname,

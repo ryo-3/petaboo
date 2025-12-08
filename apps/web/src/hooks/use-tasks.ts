@@ -43,7 +43,7 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
       staleTime: 2 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
       enabled: teamMode ? Boolean(teamId) : true,
       placeholderData: [], // 初回も即座に空配列を表示
       keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
@@ -550,7 +550,7 @@ export function useDeletedTasks(options?: {
       staleTime: 2 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
       enabled: teamMode ? Boolean(teamId) : true,
       placeholderData: [], // 初回も即座に空配列を表示
       keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ

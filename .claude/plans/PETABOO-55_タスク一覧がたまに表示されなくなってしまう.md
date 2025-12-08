@@ -7,172 +7,78 @@
 > - **Codexに git add / git commit を実行させないこと**
 > - **完了した場合ファイルを`.claude/fixed-plans` に移動する**
 
+## ステータス: ✅ 修正完了
+
 ## 問題の症状
 
-- ボード詳細画面でアイテムがいくつもあるのに、タスク一覧に一個も表示されないことがある
-- 本番環境でよく発生
-- PETABOO-4と同じ類のバグの可能性
+1. **タスク一覧が空になる問題**
+   - ボード詳細画面からタスク一覧に遷移すると、タスクが0件表示される
+   - 本番環境でのみ発生
+   - リロードすると直る
 
-## 原因調査結果
+2. **サイドバーアイコンが更新されない問題**
+   - メモ/タスク一覧を開いても、サイドバーのアイコンがホームのままハイライトされる
+   - ログでは`iconStates.memo: true`なのにUIに反映されない
+   - 本番環境でのみ発生
 
-### 1. キャッシュ設定の問題（最も可能性が高い）
+## 原因
 
-**該当ファイル**: `apps/web/src/hooks/use-boards.ts:167-172`
+### 1. タスク一覧が空になる問題
+
+`useTasks`フックで`placeholderData: []`が設定されていたため、`teamId`が未確定の状態で空配列が返されていた。
+
+### 2. サイドバーアイコンの問題
+
+**SSRハイドレーション不整合**が原因。
+
+- SSR時: `iconStates.home = true`（初期状態）でHTMLが生成される
+- CSR時: `iconStates.memo = true`（URL解析後の正しい状態）に更新
+- **しかしハイドレーション後にDOMが更新されない**（Reactがサーバー生成のHTMLと一致しないと判断し、更新をスキップ）
+
+## 修正内容
+
+### 1. `use-tasks.ts` - placeholderDataの削除
 
 ```typescript
-{
-  enabled: boardId !== null && isLoaded && !skip,
-  staleTime: 2 * 60 * 1000,      // 2分
-  cacheTime: 10 * 60 * 1000,     // 10分
-  refetchOnWindowFocus: false,   // ← 問題
-  refetchOnMount: false,         // ← 問題
-}
+// 変更前
+placeholderData: [], // 初回も即座に空配列を表示
+
+// 変更後
+// PETABOO-55: placeholderDataを削除 - teamId未確定時に空配列を返さないようにする
 ```
 
-**問題点**:
-
-- `refetchOnMount: false` - コンポーネントがマウントされても再フェッチしない
-- `refetchOnWindowFocus: false` - ウィンドウがフォーカスされても再フェッチしない
-- キャッシュが古いままで、新しく追加されたタスクが表示されない
-
-### 2. contentがnullの場合のフィルタリング
-
-**該当ファイル**: `apps/api/src/routes/boards/api.ts:1024`
+### 2. `team/[customUrl]/layout.tsx` - Sidebarをdynamic importに変更
 
 ```typescript
-// 削除されたアイテムを除外
-const validItems = itemsWithContent.filter((item) => item.content !== null);
-```
+// 変更前
+import Sidebar from "@/components/layout/sidebar";
 
-タスクのcontentがnullになるケース:
-
-- タスクが削除された場合（`tasks.deletedAt`がnullでない）
-- displayIdの不整合がある場合
-
-### 3. タスクステータスによるフィルタリング
-
-**該当ファイル**: `apps/web/src/hooks/use-board-items.ts:107-110`
-
-```typescript
-return allTaskItems.filter((item: BoardItemWithContent) => {
-  const task = item.content as Task;
-  return task.status === activeTaskTab;
+// 変更後
+// PETABOO-55: SSRハイドレーション問題を回避するため、Sidebarをクライアントサイドのみでレンダリング
+const Sidebar = dynamic(() => import("@/components/layout/sidebar"), {
+  ssr: false,
 });
 ```
 
-**問題点**:
+これにより、SidebarはSSR時にはレンダリングされず、クライアントサイドでのみレンダリングされるため、ハイドレーション不整合が発生しない。
 
-- `task.status`が`undefined`または予期しない値の場合、すべてのタブでフィルタリングされる
-- DBのstatusと表示中のactiveTaskTabが一致しない場合、タスクが非表示になる
+## 変更ファイル
 
-## 修正方針
+- `apps/web/src/hooks/use-tasks.ts`
+  - `useTasks`: `placeholderData: []`を削除
+  - `useDeletedTasks`: `placeholderData: []`を削除
+- `apps/web/components/screens/task-screen.tsx`
+  - デバッグログ追加（タスク一覧が異常に空の時のみ）
+- `apps/web/src/contexts/navigation-context.tsx`
+  - デバッグログ追加（iconStates計算結果）
+- `apps/web/components/layout/sidebar.tsx`
+  - デバッグログ追加（iconStates受信）
+- `apps/web/app/team/[customUrl]/layout.tsx`
+  - Sidebarをdynamic importでSSR無効化
 
-### 方針1: キャッシュ設定の見直し（推奨）
+## 学んだこと
 
-`useBoardWithItems`のキャッシュ設定を変更:
-
-```typescript
-{
-  enabled: boardId !== null && isLoaded && !skip,
-  staleTime: 30 * 1000,          // 30秒に短縮
-  cacheTime: 5 * 60 * 1000,      // 5分に短縮
-  refetchOnWindowFocus: true,    // フォーカス時に再フェッチ
-  refetchOnMount: true,          // マウント時に再フェッチ（stale時のみ）
-}
-```
-
-### 方針2: フィルタリングの安全対策
-
-タスクステータスが不正な場合のフォールバック:
-
-```typescript
-// apps/web/src/hooks/use-board-items.ts
-const taskItems = useMemo(() => {
-  if (activeTaskTab === "deleted") {
-    return (boardDeletedItems?.tasks || []).map(/* ... */);
-  }
-  return allTaskItems.filter((item: BoardItemWithContent) => {
-    const task = item.content as Task;
-    // statusが undefined または無効な値の場合は「todo」として扱う
-    const status = task?.status || "todo";
-    return status === activeTaskTab;
-  });
-}, [activeTaskTab, boardDeletedItems?.tasks, boardId, allTaskItems]);
-```
-
-### 方針3: デバッグログの追加（調査用）
-
-本番環境でデバッグするために、一時的にログを追加:
-
-```typescript
-// apps/web/src/hooks/use-board-items.ts
-const taskItems = useMemo(
-  () => {
-    // デバッグ: 全タスクアイテムの状態を出力
-    if (
-      process.env.NODE_ENV === "development" ||
-      window.location.hostname.includes("vercel")
-    ) {
-      console.log("📊 Board Task Items Debug:", {
-        allTaskItemsCount: allTaskItems.length,
-        activeTaskTab,
-        taskStatuses: allTaskItems.map((item) => ({
-          id: item.content?.id,
-          status: (item.content as Task)?.status,
-          hasContent: !!item.content,
-        })),
-      });
-    }
-    // ...
-  },
-  [
-    /* ... */
-  ],
-);
-```
-
-## 実装手順
-
-### Step 1: キャッシュ設定の修正
-
-**ファイル**: `apps/web/src/hooks/use-boards.ts`
-
-- `useBoardWithItems`のオプションを変更
-- `useBoardDeletedItems`も同様に変更
-
-### Step 2: フィルタリングの安全対策
-
-**ファイル**: `apps/web/src/hooks/use-board-items.ts`
-
-- タスクステータスのnullチェックを追加
-- contentがundefinedの場合のハンドリング
-
-### Step 3: テスト確認
-
-- ローカルで動作確認
-- `npm run check:wsl`を実行
-
-## 影響範囲
-
-- `apps/web/src/hooks/use-boards.ts`
-- `apps/web/src/hooks/use-board-items.ts`
-- ボード詳細画面（個人・チーム両方）
-
-## Codex用ToDoリスト
-
-1. [ ] `apps/web/src/hooks/use-boards.ts`の`useBoardWithItems`関数のキャッシュ設定を変更
-   - staleTime: 30秒
-   - cacheTime: 5分
-   - refetchOnWindowFocus: true
-   - refetchOnMount: true（デフォルト）に変更
-
-2. [ ] `apps/web/src/hooks/use-boards.ts`の`useBoardDeletedItems`関数も同様にキャッシュ設定を変更
-
-3. [ ] `apps/web/src/hooks/use-board-items.ts`のタスクフィルタリングにnullチェックを追加
-
-4. [ ] `npm run check:wsl`でビルドエラーがないことを確認
-
-## 備考
-
-- PETABOO-4との関連：おそらく同じキャッシュ問題が原因
-- 本番環境で「たまに」発生する理由：キャッシュの有効期限（2分）内にアクセスした場合に古いデータが表示される
+- Next.jsのSSR + クライアントサイドの状態管理は、ハイドレーション不整合を起こしやすい
+- URLパラメータに依存する状態は、SSR時とCSR時で異なる値になりやすい
+- `dynamic import`で`ssr: false`を指定することで、ハイドレーション問題を回避できる
+- 本番環境でのみ発生する問題は、SSR関連の可能性が高い（開発環境ではSSRの挙動が異なる場合がある）

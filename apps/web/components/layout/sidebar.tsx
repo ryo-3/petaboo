@@ -92,15 +92,6 @@ function Sidebar({
 }: SidebarProps) {
   // NavigationContextから統一されたiconStatesと楽観的更新を取得
   const { iconStates, setOptimisticMode } = useNavigation();
-
-  // PETABOO-55 デバッグ: Sidebarが受け取るiconStates
-  console.log("🎨 [Sidebar] iconStates受信", {
-    home: iconStates.home,
-    memo: iconStates.memo,
-    task: iconStates.task,
-    board: iconStates.board,
-    boardDetail: iconStates.boardDetail,
-  });
   // pathnameを取得してチームモード判定
   const pathname = usePathname();
   const isTeamMode = pathname?.startsWith("/team/") ?? false;

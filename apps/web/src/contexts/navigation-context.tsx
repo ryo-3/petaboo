@@ -103,32 +103,12 @@ export function NavigationProvider({
   >(initialCurrentMode);
 
   // モード切り替え関数（useCallback で安定化）
-  // PETABOO-50: screenMode変更をログ出力
   const setScreenMode = useCallback((mode: ScreenMode) => {
-    setScreenModeInternal((prev) => {
-      if (prev !== mode) {
-        console.log("🔄 [NavigationContext] screenMode変更", {
-          from: prev,
-          to: mode,
-          stack: new Error().stack?.split("\n").slice(2, 5).join("\n"),
-        });
-      }
-      return mode;
-    });
+    setScreenModeInternal(mode);
   }, []);
 
-  // PETABOO-50: currentMode変更をログ出力
   const setCurrentMode = useCallback((mode: "memo" | "task" | "board") => {
-    setCurrentModeInternal((prev) => {
-      if (prev !== mode) {
-        console.log("🔄 [NavigationContext] currentMode変更", {
-          from: prev,
-          to: mode,
-          stack: new Error().stack?.split("\n").slice(2, 5).join("\n"),
-        });
-      }
-      return mode;
-    });
+    setCurrentModeInternal(mode);
   }, []);
   const [isFromBoardDetail, setIsFromBoardDetail] = useState(false);
   const [handleMainSelectMemo, setHandleMainSelectMemo] = useState<
@@ -227,33 +207,6 @@ export function NavigationProvider({
           (!effectiveTab && screenMode === "team"),
       };
 
-      // PETABOO-50: チームページのiconStates計算結果をログ出力
-      const activeIconKey = Object.entries(result).find(
-        ([, v]) => v === true,
-      )?.[0];
-      console.log("📍 [NavigationContext] チームiconStates", {
-        url: `${pathname}?${searchParams.toString()}`,
-        activeTab,
-        effectiveTab,
-        activeIcon: activeIconKey || "none",
-        optimisticMode,
-      });
-
-      // PETABOO-50: チームページでhomeがtrueだが期待するタブがある場合に警告
-      if (result.home && activeTab && activeTab !== "overview") {
-        console.warn(
-          "🔴 [NavigationContext] チームiconStates異常: homeがtrueだがactiveTabがある",
-          {
-            pathname,
-            activeTab,
-            effectiveTab,
-            optimisticMode,
-            searchParamsStr: searchParams.toString(),
-            result,
-          },
-        );
-      }
-
       return result;
     }
 
@@ -328,35 +281,6 @@ export function NavigationProvider({
       settings: screenMode === "settings",
       team: isTeamScreen,
     };
-
-    // PETABOO-50: 個人ページのiconStates計算結果をログ出力
-    const activeIconKey = Object.entries(result).find(
-      ([, v]) => v === true,
-    )?.[0];
-    console.log("📍 [NavigationContext] 個人iconStates", {
-      url: `${pathname}?${searchParams.toString()}`,
-      screenMode,
-      currentMode,
-      effectiveMode,
-      activeIcon: activeIconKey || "none",
-      optimisticMode,
-    });
-
-    // PETABOO-50: iconStates計算結果をログ出力（個人ページのみ）
-    if (result.home && screenMode !== "home") {
-      console.warn(
-        "🔴 [NavigationContext] iconStates異常: homeがtrueだがscreenModeはhomeではない",
-        {
-          screenMode,
-          currentMode,
-          effectiveMode,
-          isHomeScreen,
-          showTeamList,
-          pathname,
-          result,
-        },
-      );
-    }
 
     return result;
   }, [

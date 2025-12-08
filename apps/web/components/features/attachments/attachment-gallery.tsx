@@ -255,7 +255,7 @@ export default function AttachmentGallery({
 
   return (
     <>
-      <div className="flex flex-col md:flex-row md:flex-wrap gap-2 mt-3 px-2 pb-24 md:pb-8">
+      <div className="flex flex-col md:flex-row md:flex-wrap gap-2 mt-3 px-2 pb-32 md:pb-8">
         {/* 既存の画像・ファイル */}
         {attachments.map((attachment) => {
           const imageUrl = imageUrls[attachment.id];

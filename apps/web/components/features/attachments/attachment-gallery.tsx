@@ -93,6 +93,32 @@ export default function AttachmentGallery({
     [copyStatus, showToast],
   );
 
+  // 画像ダウンロード処理
+  const handleDownloadImage = useCallback(
+    async (imageUrl: string, filename?: string) => {
+      try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const downloadFilename =
+          filename || imageUrl.split("/").pop()?.split("?")[0] || "image.png";
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = downloadFilename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error("画像ダウンロード失敗:", err);
+        showToast("画像のダウンロードに失敗しました", "error");
+      }
+    },
+    [showToast],
+  );
+
   // PDFや他のファイルを認証付きで開く
   const handleFileOpen = async (attachment: Attachment) => {
     try {
@@ -381,48 +407,93 @@ export default function AttachmentGallery({
                         )}
                   </>
                 )}
-              {/* 画像コピーボタン（左下） */}
+              {/* 画像アクションボタン（左下） */}
               {isImage && imageUrl && !isProcessing && !isMarkedForDelete && (
-                <Tooltip
-                  text="画像をコピー"
-                  position="bottom"
-                  className="!absolute bottom-1 left-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyImage(imageUrl, `attachment-${attachment.id}`);
-                    }}
-                    disabled={
-                      copyStatus[`attachment-${attachment.id}`] === "copying"
-                    }
-                    className={`rounded-full p-1 ${
-                      copyStatus[`attachment-${attachment.id}`] === "success"
-                        ? "bg-green-500 text-white"
-                        : copyStatus[`attachment-${attachment.id}`] === "error"
-                          ? "bg-red-500 text-white"
-                          : "bg-white/90 text-gray-700 hover:bg-white"
-                    }`}
-                  >
-                    {copyStatus[`attachment-${attachment.id}`] === "copying" ? (
-                      <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24">
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
+                <div className="!absolute bottom-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* コピーボタン */}
+                  <Tooltip text="画像をコピー" position="top">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCopyImage(
+                          imageUrl,
+                          `attachment-${attachment.id}`,
+                        );
+                      }}
+                      disabled={
+                        copyStatus[`attachment-${attachment.id}`] === "copying"
+                      }
+                      className={`rounded-full p-1 ${
+                        copyStatus[`attachment-${attachment.id}`] === "success"
+                          ? "bg-green-500 text-white"
+                          : copyStatus[`attachment-${attachment.id}`] ===
+                              "error"
+                            ? "bg-red-500 text-white"
+                            : "bg-white/90 text-gray-700 hover:bg-white"
+                      }`}
+                    >
+                      {copyStatus[`attachment-${attachment.id}`] ===
+                      "copying" ? (
+                        <svg
+                          className="w-3 h-3 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                          />
+                        </svg>
+                      ) : copyStatus[`attachment-${attachment.id}`] ===
+                        "success" ? (
+                        <svg
+                          className="w-3 h-3"
                           fill="none"
-                        />
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                        />
-                      </svg>
-                    ) : copyStatus[`attachment-${attachment.id}`] ===
-                      "success" ? (
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </Tooltip>
+                  {/* ダウンロードボタン */}
+                  <Tooltip text="ダウンロード" position="top">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownloadImage(imageUrl, attachment.fileName);
+                      }}
+                      className="rounded-full p-1 bg-white/90 text-gray-700 hover:bg-white"
+                    >
                       <svg
                         className="w-3 h-3"
                         fill="none"
@@ -433,26 +504,12 @@ export default function AttachmentGallery({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M5 13l4 4L19 7"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                         />
                       </svg>
-                    ) : (
-                      <svg
-                        className="w-3 h-3"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </Tooltip>
+                    </button>
+                  </Tooltip>
+                </div>
               )}
             </div>
           );

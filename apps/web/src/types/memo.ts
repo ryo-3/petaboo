@@ -31,4 +31,5 @@ export interface UpdateMemoData {
   title?: string;
   content?: string;
   categoryId?: number | null;
+  updatedAt?: number; // 楽観的ロック用
 }

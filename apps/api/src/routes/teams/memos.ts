@@ -51,6 +51,7 @@ const TeamMemoInputSchema = z.object({
     .string()
     .max(10000, "内容は10,000文字以内で入力してください")
     .optional(),
+  updatedAt: z.number().optional(), // 楽観的ロック用
 });
 
 // チームメンバー確認のヘルパー関数
@@ -320,6 +321,18 @@ app.openapi(
           },
         },
       },
+      409: {
+        description: "Conflict - data was modified by another user",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+              message: z.string(),
+              latestData: TeamMemoSchema.optional(),
+            }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
@@ -347,7 +360,42 @@ app.openapi(
       );
     }
 
-    const { title, content } = parsed.data;
+    // 楽観的ロック: updatedAt を抽出して競合チェック
+    const { title, content, updatedAt: clientUpdatedAt } = parsed.data;
+
+    // 競合チェック（クライアントから updatedAt が送信された場合のみ）
+    if (clientUpdatedAt !== undefined) {
+      const currentMemo = await db
+        .select({ updatedAt: teamMemos.updatedAt })
+        .from(teamMemos)
+        .where(and(eq(teamMemos.id, id), eq(teamMemos.teamId, teamId)))
+        .get();
+
+      if (!currentMemo) {
+        return c.json({ error: "Team memo not found" }, 404);
+      }
+
+      // DB の updatedAt とクライアントの updatedAt を比較
+      if (currentMemo.updatedAt !== clientUpdatedAt) {
+        // 最新データを取得して返す
+        const latestMemo = await db
+          .select(getTeamMemoSelectFields())
+          .from(teamMemos)
+          .leftJoin(teamMembers, getTeamMemoMemberJoin())
+          .where(and(eq(teamMemos.id, id), eq(teamMemos.teamId, teamId)))
+          .get();
+
+        return c.json(
+          {
+            error: "Conflict",
+            message: "他のメンバーが変更しました",
+            latestData: latestMemo,
+          },
+          409,
+        );
+      }
+    }
+
     const result = await db
       .update(teamMemos)
       .set({
@@ -361,7 +409,15 @@ app.openapi(
       return c.json({ error: "Team memo not found" }, 404);
     }
 
-    return c.json({ success: true }, 200);
+    // 更新後のメモを取得して返す
+    const updatedMemo = await db
+      .select(getTeamMemoSelectFields())
+      .from(teamMemos)
+      .leftJoin(teamMembers, getTeamMemoMemberJoin())
+      .where(and(eq(teamMemos.id, id), eq(teamMemos.teamId, teamId)))
+      .get();
+
+    return c.json(updatedMemo || { success: true }, 200);
   },
 );
 

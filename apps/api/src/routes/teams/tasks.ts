@@ -82,6 +82,7 @@ const TeamTaskUpdateSchema = z.object({
   categoryId: z.number().optional(),
   boardCategoryId: z.number().optional(),
   assigneeId: z.string().nullable().optional(),
+  updatedAt: z.number().optional(), // 楽観的ロック用
 });
 
 // チームメンバー確認のヘルパー関数
@@ -423,6 +424,18 @@ app.openapi(
           },
         },
       },
+      409: {
+        description: "Conflict - data was modified by another user",
+        content: {
+          "application/json": {
+            schema: z.object({
+              error: z.string(),
+              message: z.string(),
+              latestData: TeamTaskSchema.optional(),
+            }),
+          },
+        },
+      },
     },
   }),
   async (c) => {
@@ -450,22 +463,62 @@ app.openapi(
       );
     }
 
-    if (
-      "assigneeId" in parsed.data &&
-      parsed.data.assigneeId &&
-      parsed.data.assigneeId !== ""
-    ) {
-      const assigneeMember = await checkTeamMember(
-        db,
-        teamId,
-        parsed.data.assigneeId,
-      );
+    // 楽観的ロック: updatedAt を抽出して競合チェック
+    const { updatedAt: clientUpdatedAt, assigneeId, ...rest } = parsed.data;
+
+    // 競合チェック（クライアントから updatedAt が送信された場合のみ）
+    if (clientUpdatedAt !== undefined) {
+      const currentTask = await db
+        .select({ updatedAt: teamTasks.updatedAt })
+        .from(teamTasks)
+        .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+        .get();
+
+      if (!currentTask) {
+        return c.json({ error: "Team task not found" }, 404);
+      }
+
+      // DB の updatedAt とクライアントの updatedAt を比較
+      if (currentTask.updatedAt !== clientUpdatedAt) {
+        // 最新データを取得して返す
+        const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+
+        const latestTask = await db
+          .select({
+            ...getTeamTaskSelectFields(),
+            assigneeName: assigneeMembers.displayName,
+            assigneeAvatarColor: assigneeMembers.avatarColor,
+          })
+          .from(teamTasks)
+          .leftJoin(teamMembers, getTeamTaskMemberJoin())
+          .leftJoin(
+            assigneeMembers,
+            and(
+              eq(teamTasks.assigneeId, assigneeMembers.userId),
+              eq(teamTasks.teamId, assigneeMembers.teamId),
+            ),
+          )
+          .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+          .get();
+
+        return c.json(
+          {
+            error: "Conflict",
+            message: "他のメンバーが変更しました",
+            latestData: latestTask,
+          },
+          409,
+        );
+      }
+    }
+
+    if (assigneeId !== undefined && assigneeId && assigneeId !== "") {
+      const assigneeMember = await checkTeamMember(db, teamId, assigneeId);
       if (!assigneeMember) {
         return c.json({ error: "Assignee must be a team member" }, 400);
       }
     }
 
-    const { assigneeId, ...rest } = parsed.data;
     const updateData = {
       ...rest,
       ...(assigneeId !== undefined

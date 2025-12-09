@@ -153,6 +153,23 @@ export function useUpdateTask(options?: {
           data,
           token || undefined,
         );
+
+        // 409 Conflict: 楽観的ロックによる競合検出
+        if (response.status === 409) {
+          const errorData = await response.json();
+          const error = new Error("Conflict") as Error & {
+            status: number;
+            latestData?: Task;
+          };
+          error.status = 409;
+          error.latestData = errorData.latestData;
+          throw error;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to update team task");
+        }
+
         const result = await response.json();
         return result;
       } else {
@@ -294,9 +311,25 @@ export function useUpdateTask(options?: {
       // PETABOO-55: setQueryDataで楽観的更新済みなので、ボード全体の無効化は不要
       // ボード詳細のアイテムキャッシュは上で既に更新済み
     },
-    onError: (error) => {
-      console.error("タスク更新に失敗しました:", error);
-      showToast("タスク更新に失敗しました", "error");
+    onError: (error: Error & { status?: number; latestData?: Task }) => {
+      if (error.status === 409 && error.latestData) {
+        // 競合エラー: 最新データでキャッシュを更新
+        showToast(
+          "他のメンバーが変更しました。最新の内容を表示します。",
+          "warning",
+          5000,
+        );
+        updateItemCache({
+          queryClient,
+          itemType: "task",
+          operation: "update",
+          item: error.latestData,
+          teamId,
+        });
+      } else {
+        console.error("タスク更新に失敗しました:", error);
+        showToast("タスク更新に失敗しました", "error");
+      }
     },
   });
 }

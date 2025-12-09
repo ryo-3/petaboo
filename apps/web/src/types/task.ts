@@ -54,4 +54,5 @@ export interface UpdateTaskData {
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID
   assigneeId?: string | null;
+  updatedAt?: number; // 楽観的ロック用
 }

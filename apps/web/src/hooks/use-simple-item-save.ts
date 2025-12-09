@@ -381,6 +381,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
           if (itemType === "memo") {
             const updateData = {
               content: content.trim() || "",
+              // チームモードの場合は updatedAt を送信（楽観的ロック）
+              // updatedAt が null または undefined の場合は送信しない
+              ...(teamMode &&
+              item.updatedAt !== undefined &&
+              item.updatedAt !== null
+                ? { updatedAt: item.updatedAt }
+                : {}),
             };
 
             await updateMemo.mutateAsync({
@@ -399,6 +406,13 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
               categoryId: categoryId ?? undefined,
               boardCategoryId: boardCategoryId ?? undefined,
+              // チームモードの場合は updatedAt を送信（楽観的ロック）
+              // updatedAt が null または undefined の場合は送信しない
+              ...(teamMode &&
+              item.updatedAt !== undefined &&
+              item.updatedAt !== null
+                ? { updatedAt: item.updatedAt }
+                : {}),
             };
 
             await updateTask.mutateAsync({

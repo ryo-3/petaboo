@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
 import { updateItemCache } from "@/src/lib/cache-utils";
+import { useToast } from "@/src/contexts/toast-context";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
@@ -47,6 +48,7 @@ interface UpdateTeamTaskData {
   dueDate?: number;
   categoryId?: number;
   boardCategoryId?: number;
+  updatedAt?: number; // 楽観的ロック用
 }
 
 // チームタスク一覧取得
@@ -151,10 +153,17 @@ export function useCreateTeamTask(teamId?: number) {
   });
 }
 
+// 競合エラーの型定義
+interface ConflictError extends Error {
+  status: number;
+  latestData?: TeamTask;
+}
+
 // チームタスク更新
 export function useUpdateTeamTask(teamId?: number) {
   const { getToken } = useAuth();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   return useMutation({
     mutationFn: async ({
@@ -179,6 +188,15 @@ export function useUpdateTeamTask(teamId?: number) {
         },
       );
 
+      // 409 Conflict: 楽観的ロックによる競合検出
+      if (response.status === 409) {
+        const errorData = await response.json();
+        const error = new Error("Conflict") as ConflictError;
+        error.status = 409;
+        error.latestData = errorData.latestData;
+        throw error;
+      }
+
       if (!response.ok) {
         throw new Error("Failed to update team task");
       }
@@ -195,6 +213,23 @@ export function useUpdateTeamTask(teamId?: number) {
       });
       // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
+    },
+    onError: (error: ConflictError) => {
+      if (error.status === 409 && error.latestData) {
+        // 競合エラー: 最新データでキャッシュを更新
+        showToast(
+          "他のメンバーが変更しました。最新の内容を表示します。",
+          "warning",
+          5000,
+        );
+        updateItemCache({
+          queryClient,
+          itemType: "task",
+          operation: "update",
+          item: error.latestData,
+          teamId,
+        });
+      }
     },
   });
 }

@@ -169,7 +169,8 @@ export const memosApi = {
       },
     );
 
-    if (!response.ok) {
+    // 409 Conflict は呼び出し元で処理するためそのまま返す
+    if (!response.ok && response.status !== 409) {
       const errorText = await response.text();
       console.error("❌ [updateTeamMemo] エラー詳細:", {
         status: response.status,
@@ -431,7 +432,8 @@ export const tasksApi = {
       },
     );
 
-    if (!response.ok) {
+    // 409 Conflict は呼び出し元で処理するためそのまま返す
+    if (!response.ok && response.status !== 409) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return response;

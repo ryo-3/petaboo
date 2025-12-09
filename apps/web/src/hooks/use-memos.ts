@@ -8,6 +8,7 @@ import type {
   UpdateMemoData,
 } from "@/src/types/memo";
 import { updateItemCache } from "@/src/lib/cache-utils";
+import { useToast } from "@/src/contexts/toast-context";
 
 // メモ一覧を取得するhook
 export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
@@ -189,6 +190,7 @@ export function useUpdateMemo(options?: {
 }) {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
+  const { showToast } = useToast();
   const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
@@ -203,6 +205,23 @@ export function useUpdateMemo(options?: {
           data,
           token || undefined,
         );
+
+        // 409 Conflict: 楽観的ロックによる競合検出
+        if (response.status === 409) {
+          const errorData = await response.json();
+          const error = new Error("Conflict") as Error & {
+            status: number;
+            latestData?: Memo;
+          };
+          error.status = 409;
+          error.latestData = errorData.latestData;
+          throw error;
+        }
+
+        if (!response.ok) {
+          throw new Error("Failed to update team memo");
+        }
+
         const responseData = await response.json();
         return responseData as Memo;
       } else {
@@ -330,6 +349,26 @@ export function useUpdateMemo(options?: {
           queryKey: ["taggings"],
           exact: false,
         });
+      }
+    },
+    onError: (error: Error & { status?: number; latestData?: Memo }) => {
+      if (error.status === 409 && error.latestData) {
+        // 競合エラー: 最新データでキャッシュを更新
+        showToast(
+          "他のメンバーが変更しました。最新の内容を表示します。",
+          "warning",
+          5000,
+        );
+        updateItemCache({
+          queryClient,
+          itemType: "memo",
+          operation: "update",
+          item: error.latestData,
+          teamId,
+        });
+      } else {
+        console.error("メモ更新に失敗しました:", error);
+        showToast("メモ更新に失敗しました", "error");
       }
     },
   });

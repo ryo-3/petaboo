@@ -7,6 +7,7 @@ import type {
   CreateMemoData,
   UpdateMemoData,
 } from "@/src/types/memo";
+import { updateItemCache } from "@/src/lib/cache-utils";
 
 // メモ一覧を取得するhook
 export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
@@ -32,11 +33,15 @@ export function useMemos(options?: { teamMode?: boolean; teamId?: number }) {
       }
     },
     enabled: teamMode ? Boolean(teamId) : true,
-    placeholderData: [], // 初回も即座に空配列を表示
-    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
+    // 個人モード: setQueryDataで更新するためAPI再取得不要
+    // チームモード: 他メンバーの変更取得のため短めのstaleTime
+    staleTime: teamMode ? 30 * 1000 : Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: teamMode ? true : false,
+    keepPreviousData: true,
     ...(teamMode && {
-      refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-      refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+      refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得
+      refetchIntervalInBackground: true,
     }),
   });
 }
@@ -68,10 +73,14 @@ export function useDeletedMemos(options?: {
         return data as DeletedMemo[];
       }
     },
-    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
+    // 個人モード: setQueryDataで更新するためAPI再取得不要
+    staleTime: teamMode ? 30 * 1000 : Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: teamMode ? true : false,
+    keepPreviousData: true,
     ...(teamMode && {
-      refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-      refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+      refetchInterval: 60 * 1000,
+      refetchIntervalInBackground: true,
     }),
   });
 }
@@ -110,12 +119,10 @@ export function useCreateMemo(options?: {
       }
     },
     onSuccess: (newMemo) => {
-      // 1. まず楽観的更新でUIを即座に反映
       if (teamMode && teamId) {
-        // チームメモのキャッシュを更新（重複チェック付き）
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
           if (!oldMemos) return [newMemo];
-          // 重複チェック（displayIdで比較）
           const exists = oldMemos.some(
             (m) => m.displayId === newMemo.displayId,
           );
@@ -123,14 +130,12 @@ export function useCreateMemo(options?: {
           return [...oldMemos, newMemo];
         });
 
-        // ボードIDが指定されている場合、ボードアイテムキャッシュも更新
         if (boardId) {
           queryClient.setQueryData(
             ["team-boards", teamId.toString(), boardId, "items"],
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (oldData: any) => {
               if (oldData?.items) {
-                // 重複チェック
                 const exists = oldData.items.some(
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   (item: any) =>
@@ -140,7 +145,7 @@ export function useCreateMemo(options?: {
                 if (exists) return oldData;
 
                 const newBoardItem = {
-                  id: `memo_${newMemo.id}`, // ボードアイテムID
+                  id: `memo_${newMemo.id}`,
                   boardId,
                   itemId: newMemo.displayId,
                   itemType: "memo" as const,
@@ -158,34 +163,19 @@ export function useCreateMemo(options?: {
               return oldData;
             },
           );
-        }
-
-        // PETABOO-55: 楽観的更新で十分なため、過剰なrefetch/invalidateを削減
-        // ボードIDが指定されている場合のみ、該当ボードのキャッシュを無効化
-        if (boardId) {
           queryClient.invalidateQueries({
             queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
         }
       } else {
-        // 個人メモのキャッシュを更新（重複チェック付き）
-        queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-          if (!oldMemos) return [newMemo];
-          // 重複チェック（displayIdで比較）
-          const exists = oldMemos.some(
-            (m) => m.displayId === newMemo.displayId,
-          );
-          if (exists) return oldMemos;
-          return [...oldMemos, newMemo];
+        // 個人モード: updateItemCacheで統一管理
+        updateItemCache({
+          queryClient,
+          itemType: "memo",
+          operation: "create",
+          item: newMemo,
+          boardId,
         });
-
-        // PETABOO-55: 楽観的更新で十分なため、過剰なrefetch/invalidateを削減
-        // ボードIDが指定されている場合のみ、該当ボードのキャッシュを無効化
-        if (boardId) {
-          queryClient.invalidateQueries({
-            queryKey: ["boards", boardId, "items"],
-          });
-        }
       }
     },
   });
@@ -228,19 +218,17 @@ export function useUpdateMemo(options?: {
     },
     onSuccess: (updatedMemo, { id, data }) => {
       if (teamMode && teamId) {
-        // チームメモ一覧のキャッシュを更新
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         queryClient.setQueryData<Memo[]>(["team-memos", teamId], (oldMemos) => {
           if (!oldMemos) return [updatedMemo];
           const updated = oldMemos.map((memo) => {
             if (memo.id === id) {
-              // APIが完全なメモオブジェクトを返した場合はそれを使用
               if (
                 updatedMemo.title !== undefined &&
                 updatedMemo.content !== undefined
               ) {
                 return updatedMemo;
               }
-              // APIが不完全な場合は既存メモを更新データでマージ
               return {
                 ...memo,
                 title: data.title !== undefined ? data.title : memo.title,
@@ -254,9 +242,6 @@ export function useUpdateMemo(options?: {
           return updated;
         });
 
-        // チーム掲示板キャッシュも楽観的更新（作成時と同様のパターン）
-
-        // ボードIDが指定されている場合、ボードアイテムキャッシュも更新
         if (boardId) {
           queryClient.setQueryData(
             ["team-boards", teamId.toString(), boardId, "items"],
@@ -295,7 +280,6 @@ export function useUpdateMemo(options?: {
           );
         }
 
-        // バックグラウンドでデータを再取得（楽観的更新の検証）
         setTimeout(() => {
           queryClient.refetchQueries({
             predicate: (query) => {
@@ -304,43 +288,49 @@ export function useUpdateMemo(options?: {
             },
           });
         }, 1000);
-      } else {
-        // 個人メモのキャッシュを更新
-        queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-          if (!oldMemos) return [updatedMemo];
-          return oldMemos.map((memo) => {
-            if (memo.id === id) {
-              // APIが完全なメモオブジェクトを返した場合はそれを使用
-              if (
-                updatedMemo.title !== undefined &&
-                updatedMemo.content !== undefined
-              ) {
-                return updatedMemo;
-              }
-              // APIが不完全な場合は既存メモを更新データでマージ
-              return {
-                ...memo,
-                title: data.title !== undefined ? data.title : memo.title,
-                content:
-                  data.content !== undefined ? data.content : memo.content,
-                updatedAt: Math.floor(Date.now() / 1000),
-              };
-            }
-            return memo;
-          });
-        });
-        // ボード関連キャッシュを無効化（一覧・統計・アイテムを含む）
+        // チームモード: タグ付け情報を無効化
         queryClient.invalidateQueries({
-          queryKey: ["boards"],
+          queryKey: ["taggings"],
+          exact: false,
+        });
+      } else {
+        // 個人モード: updateItemCacheで統一管理
+        // APIが完全なデータを返した場合はそれを使用、不完全な場合はマージ
+        const existingMemo = queryClient
+          .getQueryData<Memo[]>(["memos"])
+          ?.find((m) => m.id === id);
+
+        const mergedMemo: Memo = {
+          ...(existingMemo || updatedMemo),
+          ...updatedMemo,
+          title:
+            updatedMemo.title !== undefined
+              ? updatedMemo.title
+              : data.title !== undefined
+                ? data.title
+                : (existingMemo?.title ?? ""),
+          content:
+            updatedMemo.content !== undefined
+              ? updatedMemo.content
+              : data.content !== undefined
+                ? data.content
+                : (existingMemo?.content ?? null),
+          updatedAt: Math.floor(Date.now() / 1000),
+        };
+
+        updateItemCache({
+          queryClient,
+          itemType: "memo",
+          operation: "update",
+          item: mergedMemo,
+          boardId,
+        });
+        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
+        queryClient.invalidateQueries({
+          queryKey: ["taggings"],
           exact: false,
         });
       }
-
-      // タグ付け関連キャッシュを無効化（タグ表示更新のため）
-      queryClient.invalidateQueries({
-        queryKey: ["taggings"],
-        exact: false,
-      });
     },
   });
 }
@@ -368,7 +358,7 @@ export function useDeleteMemo(options?: {
     },
     onSuccess: (_, id) => {
       if (teamMode && teamId) {
-        // チームメモ一覧から削除されたメモを楽観的更新で即座に除去
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         const deletedMemo = queryClient
           .getQueryData<Memo[]>(["team-memos", teamId])
           ?.find((memo) => memo.id === id);
@@ -378,31 +368,26 @@ export function useDeleteMemo(options?: {
           return oldMemos.filter((memo) => memo.id !== id);
         });
 
-        // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
         if (deletedMemo) {
           const deletedMemoWithDeletedAt = {
             ...deletedMemo,
             displayId: deletedMemo.displayId || id.toString(),
-            deletedAt: Date.now(), // Unix timestamp形式
+            deletedAt: Date.now(),
           };
 
           queryClient.setQueryData<DeletedMemo[]>(
             ["team-deleted-memos", teamId],
             (oldDeletedMemos) => {
               if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
-              // 重複チェック
               const exists = oldDeletedMemos.some(
                 (m) => m.displayId === deletedMemoWithDeletedAt.displayId,
               );
-              if (exists) {
-                return oldDeletedMemos;
-              }
+              if (exists) return oldDeletedMemos;
               return [deletedMemoWithDeletedAt, ...oldDeletedMemos];
             },
           );
         }
 
-        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
         queryClient.invalidateQueries({
           predicate: (query) => {
             const key = query.queryKey as string[];
@@ -412,7 +397,6 @@ export function useDeleteMemo(options?: {
           },
         });
 
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const deletedMemoDisplayId = deletedMemo?.displayId || id.toString();
         const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
           "team-item-boards",
@@ -421,7 +405,6 @@ export function useDeleteMemo(options?: {
           deletedMemoDisplayId,
         ]);
         if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
           teamItemBoards.forEach((board) => {
             queryClient.invalidateQueries({
               queryKey: ["team-boards", teamId.toString(), board.id, "items"],
@@ -431,7 +414,6 @@ export function useDeleteMemo(options?: {
             });
           });
         } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
@@ -453,79 +435,25 @@ export function useDeleteMemo(options?: {
             },
           });
         }
+        // チームモード: タグ付け情報を無効化
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
-        // 個人メモ一覧から削除されたメモを楽観的更新で即座に除去
+        // 個人モード: updateItemCacheで統一管理
         const deletedMemo = queryClient
           .getQueryData<Memo[]>(["memos"])
           ?.find((memo) => memo.id === id);
 
-        queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-          if (!oldMemos) return [];
-          return oldMemos.filter((memo) => memo.id !== id);
-        });
-
-        // 削除済み一覧に楽観的更新で即座に追加（キャッシュ問題回避）
         if (deletedMemo) {
-          const deletedMemoWithDeletedAt = {
-            ...deletedMemo,
-            displayId: deletedMemo.displayId || id.toString(),
-            deletedAt: Date.now(), // Unix timestamp形式
-          };
-
-          queryClient.setQueryData<DeletedMemo[]>(
-            ["deletedMemos"],
-            (oldDeletedMemos) => {
-              if (!oldDeletedMemos) return [deletedMemoWithDeletedAt];
-              // 重複チェック
-              const exists = oldDeletedMemos.some(
-                (m) => m.displayId === deletedMemoWithDeletedAt.displayId,
-              );
-              if (exists) {
-                return oldDeletedMemos;
-              }
-              return [deletedMemoWithDeletedAt, ...oldDeletedMemos];
-            },
-          );
-        }
-
-        // 削除済み一覧もバックグラウンドで無効化（安全性のため）
-        queryClient.invalidateQueries({ queryKey: ["deletedMemos"] });
-
-        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
-        const deletedMemoDisplayId = deletedMemo?.displayId || id.toString();
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          "memo",
-          deletedMemoDisplayId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
+          updateItemCache({
+            queryClient,
+            itemType: "memo",
+            operation: "delete",
+            item: deletedMemo,
           });
         }
+        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
-      // 全タグ付け情報を無効化（削除されたメモに関連するタグ情報が変わる可能性があるため）
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },
   });
 }
@@ -604,7 +532,7 @@ export function useRestoreMemo(options?: {
     },
     onSuccess: (_, itemId) => {
       if (teamMode && teamId) {
-        // 削除済みメモキャッシュから復元対象のメモを取得
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         const deletedMemos = queryClient.getQueryData<DeletedMemo[]>([
           "team-deleted-memos",
           teamId,
@@ -613,7 +541,6 @@ export function useRestoreMemo(options?: {
           (memo) => memo.displayId === itemId,
         );
 
-        // 削除済みメモキャッシュから復元されたメモを即座に除去
         if (deletedMemos) {
           queryClient.setQueryData(
             ["team-deleted-memos", teamId],
@@ -626,13 +553,11 @@ export function useRestoreMemo(options?: {
           );
         }
 
-        // 復元したメモをメモ一覧キャッシュに追加（即時反映）
         if (restoredMemo) {
           queryClient.setQueryData<Memo[]>(
             ["team-memos", teamId],
             (oldMemos) => {
               if (!oldMemos) return [restoredMemo as unknown as Memo];
-              // 重複チェック
               const exists = oldMemos.some(
                 (m) => m.displayId === restoredMemo.displayId,
               );
@@ -646,7 +571,6 @@ export function useRestoreMemo(options?: {
           });
         }
 
-        // 特定のボードの削除済みアイテムからも除去（存在する場合のみ）
         if (boardId) {
           const existingBoardData = queryClient.getQueryData([
             "team-board-deleted-items",
@@ -669,55 +593,23 @@ export function useRestoreMemo(options?: {
               },
             );
           }
-        }
-
-        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
-        // ボード詳細のアイテム一覧のみ無効化（該当ボードのみ）
-        if (boardId) {
           queryClient.invalidateQueries({
             queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
         }
       } else {
-        // 削除済みメモキャッシュから復元対象のメモを取得
-        const deletedMemos = queryClient.getQueryData<DeletedMemo[]>([
-          "deletedMemos",
-        ]);
-        const restoredMemo = deletedMemos?.find(
-          (memo) => memo.displayId === itemId,
-        );
+        // 個人モード: updateItemCacheで統一管理
+        const deletedMemo = queryClient
+          .getQueryData<DeletedMemo[]>(["deletedMemos"])
+          ?.find((memo) => memo.displayId === itemId);
 
-        // 削除済みメモキャッシュから復元されたメモを即座に除去
-        if (deletedMemos) {
-          queryClient.setQueryData(
-            ["deletedMemos"],
-            (oldDeletedMemos: DeletedMemo[] | undefined) => {
-              if (!oldDeletedMemos) return [];
-              return oldDeletedMemos.filter(
-                (memo) => memo.displayId !== itemId,
-              );
-            },
-          );
-        }
-
-        // 復元したメモをメモ一覧キャッシュに追加（即時反映）
-        if (restoredMemo) {
-          queryClient.setQueryData<Memo[]>(["memos"], (oldMemos) => {
-            if (!oldMemos) return [restoredMemo as unknown as Memo];
-            // 重複チェック
-            const exists = oldMemos.some(
-              (m) => m.displayId === restoredMemo.displayId,
-            );
-            if (exists) return oldMemos;
-            return [...oldMemos, restoredMemo as unknown as Memo];
-          });
-        }
-
-        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは最小限に
-        // ボード詳細のアイテム一覧のみ無効化（該当ボードのみ）
-        if (boardId) {
-          queryClient.invalidateQueries({
-            queryKey: ["boards", boardId, "items"],
+        if (deletedMemo) {
+          updateItemCache({
+            queryClient,
+            itemType: "memo",
+            operation: "restore",
+            item: deletedMemo,
+            boardId,
           });
         }
       }

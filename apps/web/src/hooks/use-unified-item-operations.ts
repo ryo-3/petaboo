@@ -6,6 +6,7 @@ import type { Task, DeletedTask } from "@/src/types/task";
 import type { BoardWithItems } from "@/src/types/board";
 import { memosApi } from "@/src/lib/api-client";
 import { tasksApi } from "@/src/lib/api-client";
+import { updateItemCache } from "@/src/lib/cache-utils";
 
 // 統一アイテム型定義
 type UnifiedItem = Memo | Task;
@@ -168,87 +169,67 @@ export function useUnifiedItemOperations({
       await apiEndpoints.delete(id, token || undefined);
     },
     onSuccess: (_, id) => {
-      // const itemName = itemType === "memo" ? "メモ" : "タスク"; // 現在は未使用
-      // const contextName = context === "team" ? "チーム" : "個人"; // 現在は未使用
+      if (context === "team" && teamId) {
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
+        const deletedItem = queryClient
+          .getQueryData<UnifiedItem[]>(cacheKeys.items)
+          ?.find((item) => item.id === id);
 
-      // アイテム一覧から削除されたアイテムを楽観的更新で即座に除去
-      const deletedItem = queryClient
-        .getQueryData<UnifiedItem[]>(cacheKeys.items)
-        ?.find((item) => item.id === id);
+        queryClient.setQueryData<UnifiedItem[]>(cacheKeys.items, (oldItems) => {
+          if (!oldItems) return [];
+          return oldItems.filter((item) => item.id !== id);
+        });
 
-      queryClient.setQueryData<UnifiedItem[]>(cacheKeys.items, (oldItems) => {
-        if (!oldItems) return [];
-        return oldItems.filter((item) => item.id !== id);
-      });
+        if (deletedItem) {
+          const deletedItemWithDeletedAt = {
+            ...deletedItem,
+            displayId: deletedItem.displayId || id.toString(),
+            deletedAt: Date.now(),
+          };
 
-      // 削除済み一覧に楽観的更新で即座に追加
-      if (deletedItem) {
-        // 楽観的更新ログ（削除予定）
+          queryClient.setQueryData<UnifiedDeletedItem[]>(
+            cacheKeys.deletedItems,
+            (oldDeletedItems) => {
+              if (!oldDeletedItems)
+                return [deletedItemWithDeletedAt as UnifiedDeletedItem];
+              const exists = oldDeletedItems.some(
+                (item) => item.displayId === deletedItemWithDeletedAt.displayId,
+              );
+              if (exists) return oldDeletedItems;
+              return [
+                deletedItemWithDeletedAt as UnifiedDeletedItem,
+                ...oldDeletedItems,
+              ];
+            },
+          );
+        }
 
-        const deletedItemWithDeletedAt = {
-          ...deletedItem,
-          displayId: deletedItem.displayId || id.toString(),
-          deletedAt: Date.now(), // Unix timestamp形式
-        };
+        if (cacheKeys.boardItems) {
+          queryClient.setQueryData<BoardWithItems>(
+            cacheKeys.boardItems,
+            (oldData) => {
+              if (!oldData) return oldData;
+              return {
+                ...oldData,
+                items: oldData.items.filter(
+                  (item) => !(item.content && item.content.id === id),
+                ),
+              };
+            },
+          );
+        }
 
-        queryClient.setQueryData<UnifiedDeletedItem[]>(
-          cacheKeys.deletedItems,
-          (oldDeletedItems) => {
-            if (!oldDeletedItems)
-              return [deletedItemWithDeletedAt as UnifiedDeletedItem];
-            // 重複チェック
-            const exists = oldDeletedItems.some(
-              (item) => item.displayId === deletedItemWithDeletedAt.displayId,
-            );
-            if (exists) {
-              // 重複スキップログ（削除予定）
-              return oldDeletedItems;
-            }
-            return [
-              deletedItemWithDeletedAt as UnifiedDeletedItem,
-              ...oldDeletedItems,
-            ];
-          },
-        );
-      }
-
-      // ボードアイテム一覧からも楽観的更新で即座に除去
-      if (cacheKeys.boardItems) {
-        queryClient.setQueryData<BoardWithItems>(
-          cacheKeys.boardItems,
-          (oldData) => {
-            if (!oldData) return oldData;
-            return {
-              ...oldData,
-              items: oldData.items.filter(
-                (item) => !(item.content && item.content.id === id),
-              ),
-            };
-          },
-        );
-      }
-
-      // バックグラウンドで安全性のため無効化
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey as string[];
-          if (context === "team" && teamId) {
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
             return (
               key[0] === `team-deleted-${itemType}s` &&
               key[1] === teamId.toString()
             );
-          }
-          return (
-            key[0] === (itemType === "memo" ? "deletedMemos" : "deleted-tasks")
-          );
-        },
-      });
+          },
+        });
 
-      // ボード関連キャッシュの更新（紐づいているボードのみ）
-      const deletedDisplayId = deletedItem?.displayId || id.toString();
-
-      if (context === "team" && teamId) {
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
+        const deletedDisplayId = deletedItem?.displayId || id.toString();
         const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
           "team-item-boards",
           teamId,
@@ -256,7 +237,6 @@ export function useUnifiedItemOperations({
           deletedDisplayId,
         ]);
         if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
           teamItemBoards.forEach((board) => {
             queryClient.invalidateQueries({
               queryKey: ["team-boards", teamId.toString(), board.id, "items"],
@@ -266,7 +246,6 @@ export function useUnifiedItemOperations({
             });
           });
         } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
@@ -289,43 +268,21 @@ export function useUnifiedItemOperations({
           });
         }
       } else {
-        // 紐づいている個人ボードのアイテムキャッシュのみ無効化・再取得
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          itemType,
-          deletedDisplayId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
+        // 個人モード: updateItemCacheで統一管理
+        const deletedItem = queryClient
+          .getQueryData<UnifiedItem[]>(cacheKeys.items)
+          ?.find((item) => item.id === id);
+
+        if (deletedItem) {
+          updateItemCache({
+            queryClient,
+            itemType,
+            operation: "delete",
+            item: deletedItem,
+            boardId,
           });
         }
       }
-
-      // PETABOO-55: 過剰なinvalidateを削減（全ボードアイテムの再取得は不要）
-      // 必要なボードキャッシュは上で個別に無効化済み
-
-      // showToast(`${itemName}を削除しました`, "success"); // トースト通知は無効化
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     onError: (_error) => {
@@ -348,64 +305,49 @@ export function useUnifiedItemOperations({
       return response;
     },
     onSuccess: (restoredItemData, displayId) => {
-      // const contextName = context === "team" ? "チーム" : "個人"; // 現在は未使用
+      if (context === "team" && teamId) {
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
+        const deletedItem = queryClient
+          .getQueryData<UnifiedDeletedItem[]>(cacheKeys.deletedItems)
+          ?.find((item) => item.displayId === displayId);
 
-      // 削除済み一覧から復元されたアイテムを楽観的更新で即座に除去
-      const deletedItem = queryClient
-        .getQueryData<UnifiedDeletedItem[]>(cacheKeys.deletedItems)
-        ?.find((item) => item.displayId === displayId);
+        queryClient.setQueryData<UnifiedDeletedItem[]>(
+          cacheKeys.deletedItems,
+          (oldDeletedItems) => {
+            if (!oldDeletedItems) return [];
+            return oldDeletedItems.filter(
+              (item) => item.displayId !== displayId,
+            );
+          },
+        );
 
-      queryClient.setQueryData<UnifiedDeletedItem[]>(
-        cacheKeys.deletedItems,
-        (oldDeletedItems) => {
-          if (!oldDeletedItems) return [];
-          return oldDeletedItems.filter((item) => item.displayId !== displayId);
-        },
-      );
-
-      // 通常一覧に復元されたアイテムを楽観的更新で追加
-      if (deletedItem && restoredItemData) {
-        // 復元されたアイテムデータを使用（deletedAtを除去）
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { deletedAt, ...restoredItem } = deletedItem;
-        queryClient.setQueryData<UnifiedItem[]>(cacheKeys.items, (oldItems) => {
-          if (!oldItems) return [restoredItem as UnifiedItem];
-          // 重複チェック
-          const exists = oldItems.some(
-            (item) => item.displayId === restoredItem.displayId,
+        if (deletedItem && restoredItemData) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { deletedAt, ...restoredItem } = deletedItem;
+          queryClient.setQueryData<UnifiedItem[]>(
+            cacheKeys.items,
+            (oldItems) => {
+              if (!oldItems) return [restoredItem as UnifiedItem];
+              const exists = oldItems.some(
+                (item) => item.displayId === restoredItem.displayId,
+              );
+              if (exists) return oldItems;
+              return [restoredItem as UnifiedItem, ...oldItems];
+            },
           );
-          if (exists) {
-            // console.log(
-            //   `⚠️ ${contextName}通常一覧に既に存在するためスキップ`,
-            //   restoredItem.displayId,
-            // );
-            return oldItems;
-          }
-          return [restoredItem as UnifiedItem, ...oldItems];
-        });
-      }
+        }
 
-      // バックグラウンドで安全性のため無効化・再取得
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey as string[];
-          if (context === "team" && teamId) {
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const key = query.queryKey as string[];
             return (
               key[0] === `team-deleted-${itemType}s` &&
               key[1] === teamId.toString()
             );
-          }
-          return (
-            key[0] === (itemType === "memo" ? "deletedMemos" : "deleted-tasks")
-          );
-        },
-      });
-      // refetchQueriesではなくinvalidateQueriesを使用（クエリが存在しない場合のエラー回避）
-      queryClient.invalidateQueries({ queryKey: cacheKeys.items });
+          },
+        });
+        queryClient.invalidateQueries({ queryKey: cacheKeys.items });
 
-      // ボード関連キャッシュの更新（紐づいているボードのみ）
-      if (context === "team" && teamId) {
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
           "team-item-boards",
           teamId,
@@ -413,7 +355,6 @@ export function useUnifiedItemOperations({
           displayId,
         ]);
         if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
           teamItemBoards.forEach((board) => {
             queryClient.invalidateQueries({
               queryKey: ["team-boards", teamId.toString(), board.id, "items"],
@@ -437,7 +378,6 @@ export function useUnifiedItemOperations({
             });
           });
         } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
@@ -478,58 +418,21 @@ export function useUnifiedItemOperations({
           });
         }
       } else {
-        // 紐づいている個人ボードのアイテムキャッシュのみ無効化・再取得
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          itemType,
-          displayId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
+        // 個人モード: updateItemCacheで統一管理
+        const deletedItem = queryClient
+          .getQueryData<UnifiedDeletedItem[]>(cacheKeys.deletedItems)
+          ?.find((item) => item.displayId === displayId);
+
+        if (deletedItem && restoredItemData) {
+          updateItemCache({
+            queryClient,
+            itemType,
+            operation: "restore",
+            item: deletedItem,
+            boardId,
           });
         }
       }
-
-      // PETABOO-55: 過剰なinvalidateを削減（全ボードアイテムの再取得は不要）
       // 必要なボードキャッシュは上で個別に無効化済み
 
       // showToast(`${itemName}を復元しました`, "success"); // トースト通知は無効化

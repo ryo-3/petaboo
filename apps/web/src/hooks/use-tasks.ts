@@ -8,6 +8,7 @@ import type {
   UpdateTaskData,
 } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
+import { updateItemCache } from "@/src/lib/cache-utils";
 
 // グローバル削除処理追跡（重複削除防止）- タスク用
 const activeTaskDeleteOperations = new Set<string>();
@@ -40,18 +41,18 @@ export function useTasks(options?: { teamMode?: boolean; teamId?: number }) {
       }
     },
     {
-      staleTime: 2 * 60 * 1000,
+      enabled: teamMode ? Boolean(teamId) : true,
+      // 個人モード: setQueryDataで更新するためAPI再取得不要
+      // チームモード: 他メンバーの変更取得のため短めのstaleTime
+      staleTime: teamMode ? 30 * 1000 : Infinity,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
-      refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
-      enabled: teamMode ? Boolean(teamId) : true,
-      // PETABOO-55: placeholderDataを削除 - teamId未確定時に空配列を返さないようにする
-      // placeholderData: [], を削除
-      keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
+      refetchOnMount: teamMode ? true : false,
+      keepPreviousData: true,
       ...(teamMode &&
         teamId && {
-          refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-          refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+          refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得
+          refetchIntervalInBackground: true,
         }),
     },
   );
@@ -87,9 +88,8 @@ export function useCreateTask(options?: {
       }
     },
     onSuccess: (newTask) => {
-      // 1. まず楽観的更新でUIを即座に反映（invalidateより先に実行）
       if (teamMode && teamId) {
-        // チームタスク一覧に新しいタスクを楽観的に追加（キャッシュが存在する場合のみ）
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         const existingCache = queryClient.getQueryData<Task[]>([
           "team-tasks",
           teamId,
@@ -99,7 +99,6 @@ export function useCreateTask(options?: {
             ["team-tasks", teamId],
             (oldTasks) => {
               if (!oldTasks) return [newTask];
-              // 重複チェック（displayIdで比較）
               const exists = oldTasks.some(
                 (t) => t.displayId === newTask.displayId,
               );
@@ -108,33 +107,21 @@ export function useCreateTask(options?: {
             },
           );
         }
-      } else {
-        // 個人タスクのキャッシュを楽観的に更新
-        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
-          if (!oldTasks) return [newTask];
-          // 重複チェック（displayIdで比較）
-          const exists = oldTasks.some(
-            (t) => t.displayId === newTask.displayId,
-          );
-          if (exists) return oldTasks;
-          return [...oldTasks, newTask];
-        });
-      }
-
-      // PETABOO-55: 過剰なinvalidate/refetchがレースコンディションを引き起こす可能性があるため削減
-      // 2. ボードコンテキストの場合、該当ボードのアイテムリストのみ無効化
-      if (boardId) {
-        if (teamMode && teamId) {
-          // チームボード - 該当ボードのみ
+        // チームボード - 該当ボードのみ
+        if (boardId) {
           queryClient.invalidateQueries({
             queryKey: ["team-boards", teamId.toString(), boardId, "items"],
           });
-        } else {
-          // 個人ボード - 該当ボードのみ
-          queryClient.invalidateQueries({
-            queryKey: ["boards", boardId, "items"],
-          });
         }
+      } else {
+        // 個人モード: updateItemCacheで統一管理
+        updateItemCache({
+          queryClient,
+          itemType: "task",
+          operation: "create",
+          item: newTask,
+          boardId,
+        });
       }
     },
     onError: (error) => {
@@ -362,7 +349,7 @@ export function useDeleteTask(options?: {
     },
     onSuccess: async (_, id) => {
       if (teamMode && teamId) {
-        // チームタスク一覧から削除されたタスクを楽観的更新で即座に除去
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         const deletedTask = queryClient
           .getQueryData<Task[]>(["team-tasks", teamId])
           ?.find((task) => task.id === id);
@@ -372,31 +359,25 @@ export function useDeleteTask(options?: {
           return oldTasks.filter((task) => task.id !== id);
         });
 
-        // 削除済み一覧に楽観的更新で即座に追加（メモと同じ実装）
         if (deletedTask) {
           const deletedTaskWithDeletedAt = {
             ...deletedTask,
             displayId: deletedTask.displayId || id.toString(),
-            deletedAt: Date.now(), // Unix timestamp形式
+            deletedAt: Date.now(),
           };
 
           queryClient.setQueryData<DeletedTask[]>(
             ["team-deleted-tasks", teamId],
             (oldDeletedTasks) => {
               if (!oldDeletedTasks) return [deletedTaskWithDeletedAt];
-              // 重複チェック
               const exists = oldDeletedTasks.some(
                 (t) => t.displayId === deletedTaskWithDeletedAt.displayId,
               );
-              if (exists) {
-                return oldDeletedTasks;
-              }
+              if (exists) return oldDeletedTasks;
               return [deletedTaskWithDeletedAt, ...oldDeletedTasks];
             },
           );
         }
-
-        // PETABOO-55: setQueryDataで削除済み一覧に追加済みなので、invalidateは不要
 
         // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
@@ -407,7 +388,6 @@ export function useDeleteTask(options?: {
           deletedTaskDisplayId,
         ]);
         if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
           teamItemBoards.forEach((board) => {
             queryClient.invalidateQueries({
               queryKey: ["team-boards", teamId.toString(), board.id, "items"],
@@ -417,7 +397,6 @@ export function useDeleteTask(options?: {
             });
           });
         } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
@@ -439,79 +418,25 @@ export function useDeleteTask(options?: {
             },
           });
         }
+        // チームモード: タグ付け情報を無効化
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
-        // 個人タスク一覧から削除されたタスクを楽観的更新で即座に除去
+        // 個人モード: updateItemCacheで統一管理
         const deletedTask = queryClient
           .getQueryData<Task[]>(["tasks"])
           ?.find((task) => task.id === id);
 
-        queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
-          if (!oldTasks) return [];
-          return oldTasks.filter((task) => task.id !== id);
-        });
-
-        // 削除済み一覧に楽観的更新で即座に追加（メモと同じ実装）
         if (deletedTask) {
-          const deletedTaskWithDeletedAt = {
-            ...deletedTask,
-            displayId: deletedTask.displayId || id.toString(),
-            deletedAt: Date.now(), // Unix timestamp形式
-          };
-
-          queryClient.setQueryData<DeletedTask[]>(
-            ["deleted-tasks"],
-            (oldDeletedTasks) => {
-              if (!oldDeletedTasks) return [deletedTaskWithDeletedAt];
-              // 重複チェック
-              const exists = oldDeletedTasks.some(
-                (t) => t.displayId === deletedTaskWithDeletedAt.displayId,
-              );
-              if (exists) {
-                return oldDeletedTasks;
-              }
-              return [deletedTaskWithDeletedAt, ...oldDeletedTasks];
-            },
-          );
-        }
-
-        // PETABOO-55: setQueryDataで削除済み一覧に追加済みなので、invalidateは不要
-
-        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
-        const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          "task",
-          deletedTaskDisplayId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
+          updateItemCache({
+            queryClient,
+            itemType: "task",
+            operation: "delete",
+            item: deletedTask,
           });
         }
+        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
-
-      // 全タグ付け情報を無効化（削除されたタスクに関連するタグ情報が変わる可能性があるため）
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },
     onError: (error) => {
       const errorObj = error as Error;
@@ -549,17 +474,17 @@ export function useDeletedTasks(options?: {
       }
     },
     {
-      staleTime: 2 * 60 * 1000,
+      enabled: teamMode ? Boolean(teamId) : true,
+      // 個人モード: setQueryDataで更新するためAPI再取得不要
+      staleTime: teamMode ? 30 * 1000 : Infinity,
       cacheTime: 10 * 60 * 1000,
       refetchOnWindowFocus: false,
-      refetchOnMount: true, // stale時にマウントで再取得（PETABOO-55対応）
-      enabled: teamMode ? Boolean(teamId) : true,
-      // PETABOO-55: placeholderDataを削除 - teamId未確定時に空配列を返さないようにする
-      keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
+      refetchOnMount: teamMode ? true : false,
+      keepPreviousData: true,
       ...(teamMode &&
         teamId && {
-          refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-          refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+          refetchInterval: 60 * 1000,
+          refetchIntervalInBackground: true,
         }),
     },
   );
@@ -661,7 +586,7 @@ export function useRestoreTask(options?: {
     },
     onSuccess: (restoredTaskData, displayId) => {
       if (teamMode && teamId) {
-        // チーム削除済みタスク一覧から復元されたタスクを楽観的更新で即座に除去
+        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
         const deletedTask = queryClient
           .getQueryData<DeletedTask[]>(["team-deleted-tasks", teamId])
           ?.find((task) => task.displayId === displayId);
@@ -676,36 +601,26 @@ export function useRestoreTask(options?: {
           },
         );
 
-        // チーム通常タスク一覧に復元されたタスクを楽観的更新で追加（削除時の逆操作）
         if (deletedTask && restoredTaskData) {
-          // 復元されたタスクデータを使用（deletedAtを除去）
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
           queryClient.setQueryData<Task[]>(
             ["team-tasks", teamId],
             (oldTasks) => {
               if (!oldTasks) return [restoredTask as Task];
-              // 重複チェック
               const exists = oldTasks.some(
                 (t) => t.displayId === restoredTask.displayId,
               );
-              if (exists) {
-                return oldTasks;
-              }
+              if (exists) return oldTasks;
               return [restoredTask as Task, ...oldTasks];
             },
           );
         }
 
-        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
-        // タスク一覧キャッシュは上で既に更新済み
-
-        // ボード紐づき情報（all-items）を即座に再取得（タスク一覧のアイコン表示用）
         queryClient.refetchQueries({
           queryKey: ["boards", "all-items", teamId],
         });
 
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
         const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
           "team-item-boards",
           teamId,
@@ -713,7 +628,6 @@ export function useRestoreTask(options?: {
           displayId,
         ]);
         if (teamItemBoards && teamItemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
           teamItemBoards.forEach((board) => {
             queryClient.invalidateQueries({
               queryKey: ["team-boards", teamId.toString(), board.id, "items"],
@@ -737,7 +651,6 @@ export function useRestoreTask(options?: {
             });
           });
         } else {
-          // キャッシュがない場合は現在開いてるチームボード詳細を無効化
           queryClient.invalidateQueries({
             predicate: (query) => {
               const key = query.queryKey as unknown[];
@@ -777,100 +690,26 @@ export function useRestoreTask(options?: {
             },
           });
         }
+        // チームモード: タグ付け情報を無効化
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
-        // 個人削除済みタスク一覧から復元されたタスクを楽観的更新で即座に除去
+        // 個人モード: updateItemCacheで統一管理
         const deletedTask = queryClient
           .getQueryData<DeletedTask[]>(["deleted-tasks"])
           ?.find((task) => task.displayId === displayId);
 
-        queryClient.setQueryData<DeletedTask[]>(
-          ["deleted-tasks"],
-          (oldDeletedTasks) => {
-            if (!oldDeletedTasks) return [];
-            return oldDeletedTasks.filter(
-              (task) => task.displayId !== displayId,
-            );
-          },
-        );
-
-        // 個人通常タスク一覧に復元されたタスクを楽観的更新で追加（削除時の逆操作）
         if (deletedTask && restoredTaskData) {
-          // 復元されたタスクデータを使用（deletedAtを除去）
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { deletedAt: _deletedAt, ...restoredTask } = deletedTask;
-          queryClient.setQueryData<Task[]>(["tasks"], (oldTasks) => {
-            if (!oldTasks) return [restoredTask as Task];
-            // 重複チェック
-            const exists = oldTasks.some(
-              (t) => t.displayId === restoredTask.displayId,
-            );
-            if (exists) {
-              return oldTasks;
-            }
-            return [restoredTask as Task, ...oldTasks];
+          updateItemCache({
+            queryClient,
+            itemType: "task",
+            operation: "restore",
+            item: deletedTask,
+            boardId,
           });
         }
-
-        // PETABOO-55: setQueryDataで直接更新済みなので、invalidate/refetchは不要
-        // タスク一覧キャッシュは上で既に更新済み
-
-        // ボード紐づき情報（all-items）を即座に再取得（タスク一覧のアイコン表示用）
-        queryClient.refetchQueries({
-          queryKey: ["boards", "all-items", undefined],
-        });
-
-        // 紐づいているボードのアイテムキャッシュのみ無効化・再取得
-        const itemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "item-boards",
-          "task",
-          displayId,
-        ]);
-        if (itemBoards && itemBoards.length > 0) {
-          // キャッシュがある場合は紐づきボードのみ
-          itemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["boards", board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["board-deleted-items", board.id],
-            });
-          });
-        } else {
-          // キャッシュがない場合は現在開いてるボード詳細を無効化
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "boards" && key[2] === "items";
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return key[0] === "board-deleted-items";
-            },
-          });
-        }
+        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
+        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
-      // 全タグ付け情報を無効化（復元されたタスクのタグ情報が変わる可能性があるため）
-      queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
     },
     onError: (error) => {
       console.error("タスク復元に失敗しました:", error);

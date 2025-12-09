@@ -1125,7 +1125,11 @@ function BoardDetailScreen({
                         maxSize={75}
                         className="rounded-lg bg-white flex flex-col min-h-0 border-r border-gray-200"
                       >
-                        <div className="flex flex-col h-full relative">
+                        <div
+                          className={`flex flex-col h-full relative ${
+                            showMemo ? "" : "pl-4"
+                          }`}
+                        >
                           {rightPanelMode === "memo-list" ? (
                             <BoardMemoSection
                               rightPanelMode={rightPanelMode}

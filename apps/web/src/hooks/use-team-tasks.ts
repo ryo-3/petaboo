@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
+import { updateItemCache } from "@/src/lib/cache-utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
@@ -136,8 +137,14 @@ export function useCreateTeamTask(teamId?: number) {
 
       return response.json() as Promise<TeamTask>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+    onSuccess: (newTask) => {
+      updateItemCache({
+        queryClient,
+        itemType: "task",
+        operation: "create",
+        item: newTask,
+        teamId,
+      });
       // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
@@ -176,10 +183,16 @@ export function useUpdateTeamTask(teamId?: number) {
         throw new Error("Failed to update team task");
       }
 
-      return response.json();
+      return response.json() as Promise<TeamTask>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+    onSuccess: (updatedTask) => {
+      updateItemCache({
+        queryClient,
+        itemType: "task",
+        operation: "update",
+        item: updatedTask,
+        teamId,
+      });
       // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
@@ -211,15 +224,18 @@ export function useDeleteTeamTask(teamId?: number) {
         throw new Error("Failed to delete team task");
       }
 
-      return response.json();
+      return response.json() as Promise<TeamTask>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-tasks", teamId] });
+    onSuccess: (deletedTask) => {
+      updateItemCache({
+        queryClient,
+        itemType: "task",
+        operation: "delete",
+        item: deletedTask,
+        teamId,
+      });
       // チームタグ付け情報も無効化（タスク変更時にタグ情報も更新される可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
-      queryClient.invalidateQueries({
-        queryKey: ["team-deleted-tasks", teamId],
-      });
     },
   });
 }

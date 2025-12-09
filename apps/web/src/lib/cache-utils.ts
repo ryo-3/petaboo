@@ -31,6 +31,18 @@ export type UnifiedItem = Task | Memo;
 /** 削除済みタスクまたはメモの統一型 */
 export type UnifiedDeletedItem = DeletedTask | DeletedMemo;
 
+/**
+ * キャッシュ操作で受け入れる最小限のインターフェース
+ * Task, Memo, TeamTask, TeamMemo, DeletedTask, DeletedMemo など全ての型が満たす共通フィールド
+ */
+interface CacheableItem {
+  id: number;
+  displayId: string;
+  createdAt: number;
+  updatedAt?: number | null;
+  deletedAt?: number;
+}
+
 /** ボードアイテムの型 */
 interface BoardItem {
   id?: string | number;
@@ -106,7 +118,7 @@ interface UpdateItemCacheParams {
   queryClient: QueryClient;
   itemType: ItemType;
   operation: Operation;
-  item: UnifiedItem | UnifiedDeletedItem;
+  item: CacheableItem;
   teamId?: number;
   boardId?: number;
 }
@@ -230,7 +242,7 @@ interface UpdateBoardItemCacheParams {
   boardId: number;
   itemType: ItemType;
   operation: Operation;
-  item: UnifiedItem | UnifiedDeletedItem;
+  item: CacheableItem;
   teamId?: number;
 }
 

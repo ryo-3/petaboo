@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@clerk/nextjs";
+import { updateItemCache } from "@/src/lib/cache-utils";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:7594";
 
@@ -123,8 +124,14 @@ export function useCreateTeamMemo(teamId?: number) {
 
       return response.json() as Promise<TeamMemo>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+    onSuccess: (newMemo) => {
+      updateItemCache({
+        queryClient,
+        itemType: "memo",
+        operation: "create",
+        item: newMemo,
+        teamId,
+      });
       // チームタグ付け情報も無効化（新しいメモにタグが付いている可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
@@ -163,10 +170,16 @@ export function useUpdateTeamMemo(teamId?: number) {
         throw new Error("Failed to update team memo");
       }
 
-      return response.json();
+      return response.json() as Promise<TeamMemo>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
+    onSuccess: (updatedMemo) => {
+      updateItemCache({
+        queryClient,
+        itemType: "memo",
+        operation: "update",
+        item: updatedMemo,
+        teamId,
+      });
       // チームタグ付け情報も無効化（メモ更新時にタグ情報も更新される可能性）
       queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
@@ -198,15 +211,15 @@ export function useDeleteTeamMemo(teamId?: number) {
         throw new Error("Failed to delete team memo");
       }
 
-      return response.json();
+      return response.json() as Promise<TeamMemo>;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-memos", teamId] });
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const key = query.queryKey as string[];
-          return key[0] === "team-deleted-memos" && key[1] === teamId;
-        },
+    onSuccess: (deletedMemo) => {
+      updateItemCache({
+        queryClient,
+        itemType: "memo",
+        operation: "delete",
+        item: deletedMemo,
+        teamId,
       });
     },
   });

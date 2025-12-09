@@ -3,7 +3,6 @@ import { useAuth } from "@clerk/nextjs";
 // import { useToast } from "@/src/contexts/toast-context"; // 現在は未使用
 import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask } from "@/src/types/task";
-import type { BoardWithItems } from "@/src/types/board";
 import { memosApi } from "@/src/lib/api-client";
 import { tasksApi } from "@/src/lib/api-client";
 import { updateItemCache } from "@/src/lib/cache-utils";
@@ -170,101 +169,19 @@ export function useUnifiedItemOperations({
     },
     onSuccess: (_, id) => {
       if (context === "team" && teamId) {
-        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
+        // チームモード: updateItemCacheで統一管理
         const deletedItem = queryClient
           .getQueryData<UnifiedItem[]>(cacheKeys.items)
           ?.find((item) => item.id === id);
 
-        queryClient.setQueryData<UnifiedItem[]>(cacheKeys.items, (oldItems) => {
-          if (!oldItems) return [];
-          return oldItems.filter((item) => item.id !== id);
-        });
-
         if (deletedItem) {
-          const deletedItemWithDeletedAt = {
-            ...deletedItem,
-            displayId: deletedItem.displayId || id.toString(),
-            deletedAt: Date.now(),
-          };
-
-          queryClient.setQueryData<UnifiedDeletedItem[]>(
-            cacheKeys.deletedItems,
-            (oldDeletedItems) => {
-              if (!oldDeletedItems)
-                return [deletedItemWithDeletedAt as UnifiedDeletedItem];
-              const exists = oldDeletedItems.some(
-                (item) => item.displayId === deletedItemWithDeletedAt.displayId,
-              );
-              if (exists) return oldDeletedItems;
-              return [
-                deletedItemWithDeletedAt as UnifiedDeletedItem,
-                ...oldDeletedItems,
-              ];
-            },
-          );
-        }
-
-        if (cacheKeys.boardItems) {
-          queryClient.setQueryData<BoardWithItems>(
-            cacheKeys.boardItems,
-            (oldData) => {
-              if (!oldData) return oldData;
-              return {
-                ...oldData,
-                items: oldData.items.filter(
-                  (item) => !(item.content && item.content.id === id),
-                ),
-              };
-            },
-          );
-        }
-
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === `team-deleted-${itemType}s` &&
-              key[1] === teamId.toString()
-            );
-          },
-        });
-
-        const deletedDisplayId = deletedItem?.displayId || id.toString();
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          itemType,
-          deletedDisplayId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-          });
-        } else {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
+          updateItemCache({
+            queryClient,
+            itemType,
+            operation: "delete",
+            item: deletedItem,
+            teamId,
+            boardId,
           });
         }
       } else {
@@ -306,115 +223,19 @@ export function useUnifiedItemOperations({
     },
     onSuccess: (restoredItemData, displayId) => {
       if (context === "team" && teamId) {
-        // チームモード: 既存のキャッシュ更新ロジックを維持（Step 2で対応）
+        // チームモード: updateItemCacheで統一管理
         const deletedItem = queryClient
           .getQueryData<UnifiedDeletedItem[]>(cacheKeys.deletedItems)
           ?.find((item) => item.displayId === displayId);
 
-        queryClient.setQueryData<UnifiedDeletedItem[]>(
-          cacheKeys.deletedItems,
-          (oldDeletedItems) => {
-            if (!oldDeletedItems) return [];
-            return oldDeletedItems.filter(
-              (item) => item.displayId !== displayId,
-            );
-          },
-        );
-
         if (deletedItem && restoredItemData) {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { deletedAt, ...restoredItem } = deletedItem;
-          queryClient.setQueryData<UnifiedItem[]>(
-            cacheKeys.items,
-            (oldItems) => {
-              if (!oldItems) return [restoredItem as UnifiedItem];
-              const exists = oldItems.some(
-                (item) => item.displayId === restoredItem.displayId,
-              );
-              if (exists) return oldItems;
-              return [restoredItem as UnifiedItem, ...oldItems];
-            },
-          );
-        }
-
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === `team-deleted-${itemType}s` &&
-              key[1] === teamId.toString()
-            );
-          },
-        });
-        queryClient.invalidateQueries({ queryKey: cacheKeys.items });
-
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          itemType,
-          displayId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-            queryClient.refetchQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-          });
-        } else {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
+          updateItemCache({
+            queryClient,
+            itemType,
+            operation: "restore",
+            item: deletedItem,
+            teamId,
+            boardId,
           });
         }
       } else {

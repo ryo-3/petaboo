@@ -21,11 +21,25 @@ export function useBoardState() {
     return () => window.removeEventListener("resize", checkDesktop);
   }, []);
 
-  // タブ状態
-  const [activeTaskTab, setActiveTaskTabInternal] =
-    useState<TaskTabType>("todo");
+  // タブ状態（sessionStorageから復元）
+  const [activeTaskTab, setActiveTaskTabInternal] = useState<TaskTabType>(
+    () => {
+      if (typeof window !== "undefined") {
+        const saved = sessionStorage.getItem("activeTaskTab");
+        if (
+          saved &&
+          ["todo", "in_progress", "checking", "completed", "deleted"].includes(
+            saved,
+          )
+        ) {
+          return saved as TaskTabType;
+        }
+      }
+      return "todo";
+    },
+  );
 
-  // PETABOO-55: タブ変更をログ出力するラッパー
+  // PETABOO-55: タブ変更をログ出力するラッパー + sessionStorage保存
   const setActiveTaskTab = useCallback(
     (newTab: TaskTabType | ((prev: TaskTabType) => TaskTabType)) => {
       setActiveTaskTabInternal((prev) => {
@@ -36,6 +50,10 @@ export function useBoardState() {
             to: next,
             stack: new Error().stack?.split("\n").slice(2, 6).join("\n"),
           });
+          // sessionStorageに保存
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem("activeTaskTab", next);
+          }
         }
         return next;
       });

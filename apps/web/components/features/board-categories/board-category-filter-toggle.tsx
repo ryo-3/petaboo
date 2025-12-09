@@ -32,7 +32,10 @@ export default function BoardCategoryFilterToggle({
 
   // フィルターオプション作成
   const filterOptions = useMemo(() => {
-    const options: { value: string; label: string; color: string }[] = [];
+    const options: { value: string; label: string; color: string }[] = [
+      { value: "all", label: "全て", color: "bg-gray-100" },
+      { value: "uncategorized", label: "未分類", color: "bg-gray-100" },
+    ];
 
     // カテゴリーをsortOrderでソート
     const sortedCategories = [...categories].sort(

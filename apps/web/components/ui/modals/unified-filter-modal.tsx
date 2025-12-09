@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useViewSettings } from "@/src/contexts/view-settings-context";
+import { useTeamContext } from "@/src/contexts/team-context";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
 import { useBoards } from "@/src/hooks/use-boards";
@@ -29,9 +30,10 @@ export default function UnifiedFilterModal({
     updateSessionState,
     closeFilterModal,
     clearCurrentFilter,
-    teamMode,
-    teamId,
   } = useViewSettings();
+
+  // TeamContextから直接取得（ViewSettingsProviderはTeamProviderの外側にあるため）
+  const { isTeamMode: teamMode, teamId } = useTeamContext();
 
   // データ取得（チームモード対応）
   const { data: personalTags = [] } = useTags({ enabled: !teamMode });
@@ -43,18 +45,6 @@ export default function UnifiedFilterModal({
   const { data: personalBoards = [] } = useBoards("normal", !teamMode);
   const { data: teamBoardsData = [] } = useTeamBoards(teamId || null, "normal");
   const boards = teamMode ? teamBoardsData : personalBoards;
-
-  // デバッグログ
-  // console.log("🔍 UnifiedFilterModal - データ取得状況:", {
-  //   teamMode,
-  //   teamId,
-  //   personalTags: personalTags?.length,
-  //   teamTagsData: teamTagsData?.length,
-  //   tags: tags?.length,
-  //   personalBoards: personalBoards?.length,
-  //   teamBoardsData: teamBoardsData?.length,
-  //   boards: boards?.length,
-  // });
 
   // ローカルstate
   const [searchQuery, setSearchQuery] = useState("");

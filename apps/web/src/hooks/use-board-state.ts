@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
+import type { TaskTabType } from "@/src/config/taskTabConfig";
 import { validatePanelToggle } from "@/src/utils/panel-helpers";
 
 export function useBoardState() {
@@ -21,23 +22,12 @@ export function useBoardState() {
   }, []);
 
   // タブ状態
-  const [activeTaskTab, setActiveTaskTabInternal] = useState<
-    "todo" | "in_progress" | "checking" | "completed" | "deleted"
-  >("todo");
+  const [activeTaskTab, setActiveTaskTabInternal] =
+    useState<TaskTabType>("todo");
 
   // PETABOO-55: タブ変更をログ出力するラッパー
   const setActiveTaskTab = useCallback(
-    (
-      newTab:
-        | "todo"
-        | "in_progress"
-        | "checking"
-        | "completed"
-        | "deleted"
-        | ((
-            prev: "todo" | "in_progress" | "checking" | "completed" | "deleted",
-          ) => "todo" | "in_progress" | "checking" | "completed" | "deleted"),
-    ) => {
+    (newTab: TaskTabType | ((prev: TaskTabType) => TaskTabType)) => {
       setActiveTaskTabInternal((prev) => {
         const next = typeof newTab === "function" ? newTab(prev) : newTab;
         if (prev !== next) {
@@ -285,13 +275,10 @@ export function useBoardState() {
   );
 
   // タスクタブ切り替え時の処理
-  const handleTaskTabChange = useCallback(
-    (newTab: "todo" | "in_progress" | "checking" | "completed" | "deleted") => {
-      setActiveTaskTab(newTab);
-      // 選択解除は行わない（タブ切り替えで選択状態は保持）
-    },
-    [],
-  );
+  const handleTaskTabChange = useCallback((newTab: TaskTabType) => {
+    setActiveTaskTab(newTab);
+    // 選択解除は行わない（タブ切り替えで選択状態は保持）
+  }, []);
 
   // メモタブ切り替え時の処理
   const handleMemoTabChange = useCallback((newTab: "normal" | "deleted") => {

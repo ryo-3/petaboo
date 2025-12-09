@@ -7,10 +7,12 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { BoardCategory } from "@/src/types/board-categories";
 import type { Attachment } from "@/src/hooks/use-attachments";
+import { getTaskTabEmptyMessage } from "@/src/config/taskTabConfig";
+import type { TaskStatus, TaskTabType } from "@/src/config/taskTabConfig";
 import { useMemo } from "react";
 
 interface TaskStatusDisplayProps {
-  activeTab: "todo" | "in_progress" | "checking" | "completed";
+  activeTab: TaskStatus;
   tasks: Task[] | undefined;
   effectiveColumnCount: number;
   selectionMode?: "select" | "check";
@@ -249,16 +251,7 @@ function TaskStatusDisplay({
   ]);
 
   const getEmptyMessage = () => {
-    switch (activeTab) {
-      case "todo":
-        return "未着手のタスクがありません";
-      case "in_progress":
-        return "進行中のタスクがありません";
-      case "completed":
-        return "完了したタスクがありません";
-      default:
-        return "タスクがありません";
-    }
+    return getTaskTabEmptyMessage(activeTab);
   };
 
   const getSortValue = (task: Task, sortId: string): number => {
@@ -518,7 +511,7 @@ export function DeletedTaskDisplay({
       showBoardName={showBoardName}
       showTags={showTags}
       sortOptions={sortOptions}
-      emptyMessage="削除済みタスクはありません"
+      emptyMessage={getTaskTabEmptyMessage("deleted" as TaskTabType)}
       renderItem={renderTask}
       getSortValue={getSortValue}
       getDefaultSortValue={getDefaultSortValue}

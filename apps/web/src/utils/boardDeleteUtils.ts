@@ -36,10 +36,12 @@
  * // タスクの削除済みタブ → 完全削除
  * shouldUsePermanentDelete("task", "normal", "deleted") // => true
  */
+import type { TaskTabType } from "@/src/config/taskTabConfig";
+
 export function shouldUsePermanentDelete(
   itemType: "memo" | "task",
   activeMemoTab: "normal" | "deleted",
-  activeTaskTab: "todo" | "in_progress" | "checking" | "completed" | "deleted",
+  activeTaskTab: TaskTabType,
 ): boolean {
   if (itemType === "memo") {
     return activeMemoTab === "deleted";

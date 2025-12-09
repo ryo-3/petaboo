@@ -1,15 +1,21 @@
+import {
+  TASK_TAB_TYPES,
+  getTaskStatusColor,
+  getTaskTab,
+  getTaskTabLabel,
+  type TaskTabType,
+} from "@/src/config/taskTabConfig";
+
+const isTaskTabType = (value: string): value is TaskTabType =>
+  (TASK_TAB_TYPES as readonly string[]).includes(value as TaskTabType);
+
 // ステータスのリスト/カード表示用の色（薄い背景色 + 濃いテキスト色）
 export const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "bg-Green/70 text-gray-100 font-medium";
-    case "checking":
-      return "bg-orange-200 text-orange-800 font-medium";
-    case "in_progress":
-      return "bg-blue-200 text-gray-600 font-medium";
-    default:
-      return "bg-zinc-200 text-gray-600 font-medium";
-  }
+  const tabId = isTaskTabType(status) ? status : null;
+  const tab = tabId ? getTaskTab(tabId) : undefined;
+  return tab
+    ? `${tab.color} ${tab.textColor} font-medium`
+    : "bg-zinc-200 text-gray-600 font-medium";
 };
 
 // 優先度のリスト/カード表示用の色（濃い背景色 + 薄いテキスト色）
@@ -25,16 +31,9 @@ export const getPriorityColor = (priority: string): string => {
 };
 
 export const getStatusText = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "完了";
-    case "checking":
-      return "確認中";
-    case "in_progress":
-      return "進行中";
-    default:
-      return "未着手";
-  }
+  const tabId = isTaskTabType(status) ? status : null;
+  const label = tabId ? getTaskTabLabel(tabId) : null;
+  return label ?? "未着手";
 };
 
 export const getPriorityText = (priority: string): string => {
@@ -104,14 +103,12 @@ export const getCategoryEditorColor = (category: string): string => {
 
 // テキストのみの色（モバイル版等で使用）
 export const getStatusColorForText = (status: string): string => {
-  switch (status) {
-    case "completed":
-      return "text-green-600";
-    case "checking":
-      return "text-orange-600";
-    case "in_progress":
-      return "text-blue-600";
-    default:
-      return "text-gray-600";
-  }
+  const tabId = isTaskTabType(status) ? status : null;
+  const tab = tabId ? getTaskTab(tabId) : undefined;
+  if (tab?.textColor) return tab.textColor;
+  const backgroundClass = getTaskStatusColor(status);
+  // 背景色がテキスト系の場合はそのまま返す、それ以外はデフォルト
+  return backgroundClass.startsWith("text-")
+    ? backgroundClass
+    : "text-gray-600";
 };

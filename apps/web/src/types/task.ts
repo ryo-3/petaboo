@@ -1,9 +1,10 @@
 import { BaseItemFields, TeamCreatorFields, DeletedItemFields } from "./common";
+import type { TaskStatus } from "@/src/config/taskTabConfig";
 
 export interface Task extends BaseItemFields, TeamCreatorFields {
   title: string;
   description: string | null;
-  status: "todo" | "in_progress" | "checking" | "completed";
+  status: TaskStatus;
   priority: "low" | "medium" | "high";
   dueDate: number | null; // Unix timestamp
   categoryId: number | null;
@@ -23,7 +24,7 @@ export interface DeletedTask
   displayId: string;
   title: string;
   description: string | null;
-  status: string;
+  status: TaskStatus | string;
   priority: string;
   dueDate: number | null;
   categoryId: number | null;
@@ -37,7 +38,7 @@ export interface DeletedTask
 export interface CreateTaskData {
   title: string;
   description?: string;
-  status?: "todo" | "in_progress" | "checking" | "completed";
+  status?: TaskStatus;
   priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;
@@ -48,7 +49,7 @@ export interface CreateTaskData {
 export interface UpdateTaskData {
   title?: string;
   description?: string;
-  status?: "todo" | "in_progress" | "checking" | "completed";
+  status?: TaskStatus;
   priority?: "low" | "medium" | "high";
   dueDate?: number;
   categoryId?: number | null;
@@ -56,3 +57,5 @@ export interface UpdateTaskData {
   assigneeId?: string | null;
   updatedAt?: number; // 楽観的ロック用
 }
+
+export type { TaskStatus } from "@/src/config/taskTabConfig";

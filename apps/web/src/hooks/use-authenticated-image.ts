@@ -1,62 +1,43 @@
-import { useState, useEffect } from "react";
 import { useAuth } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 
 /**
  * 認証付きで画像を取得し、blob URLに変換するフック
  * カードリスト表示で使用
+ * useQueryでキャッシュし、ページ遷移時の再取得を防ぐ
  */
 export function useAuthenticatedImage(imageUrl: string | undefined) {
   const { getToken } = useAuth();
-  const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (!imageUrl) {
-      setBlobUrl(null);
-      return;
-    }
+  const { data: blobUrl, isLoading } = useQuery<string | null>(
+    ["authenticated-image", imageUrl],
+    async () => {
+      if (!imageUrl) return null;
 
-    let isMounted = true;
+      const token = await getToken();
+      const response = await fetch(imageUrl, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
 
-    const loadImage = async () => {
-      try {
-        setIsLoading(true);
-        const token = await getToken();
-        const response = await fetch(imageUrl, {
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+      if (!response.ok) {
+        console.error("画像の読み込みに失敗しました:", {
+          status: response.status,
+          url: imageUrl,
         });
-
-        if (!response.ok) {
-          console.error("画像の読み込みに失敗しました:", {
-            status: response.status,
-            url: imageUrl,
-          });
-          return;
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-
-        if (isMounted) {
-          setBlobUrl(url);
-        }
-      } catch (error) {
-        console.error("画像読み込みエラー:", error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
+        throw new Error("画像の読み込みに失敗しました");
       }
-    };
 
-    loadImage();
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    },
+    {
+      enabled: !!imageUrl,
+      staleTime: Infinity,
+      cacheTime: 30 * 60 * 1000, // 30分保持
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    },
+  );
 
-    // クリーンアップ
-    return () => {
-      isMounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [imageUrl]);
-
-  return { blobUrl, isLoading };
+  return { blobUrl: blobUrl ?? null, isLoading };
 }

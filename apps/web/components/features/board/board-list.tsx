@@ -1,10 +1,25 @@
 import { useBoards, useCreateBoard } from "@/src/hooks/use-boards";
 import { useTeamBoards, useCreateTeamBoard } from "@/src/hooks/use-team-boards";
 import { CreateBoardData } from "@/src/types/board";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import BoardCard from "./board-card";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from "@dnd-kit/sortable";
+import SortableBoardCard from "./sortable-board-card";
 import BoardForm from "./board-form";
+import { useBoardOrder } from "@/src/hooks/use-board-order";
 
 interface BoardListProps {
   onBoardSelect?: (board: {
@@ -52,6 +67,41 @@ export default function BoardList({
   const error = teamMode ? teamError : individualError;
   const createIndividualBoard = useCreateBoard();
   const createTeamBoard = useCreateTeamBoard();
+
+  // ボード並び替え機能
+  const {
+    sortBoards,
+    handleReorder,
+    isLoaded: isOrderLoaded,
+  } = useBoardOrder(teamMode ? teamId : null);
+
+  // ソート済みボード
+  const sortedBoards = useMemo(() => {
+    if (!boards) return [];
+    // normalタブのみカスタム順序を適用
+    if (activeTab !== "normal") return boards;
+    return sortBoards(boards);
+  }, [boards, sortBoards, activeTab]);
+
+  // ドラッグ&ドロップセンサー
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 8px動かすとドラッグ開始
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  // ドラッグ終了ハンドラ
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      handleReorder(active.id as number, over.id as number, sortedBoards);
+    }
+  };
 
   // 選択中のボードslugを決定
   // 優先順位: 1. propsで渡されたselectedBoardSlug, 2. URLパラメータ
@@ -173,7 +223,7 @@ export default function BoardList({
         </div>
       )}
 
-      {boards && boards.length === 0 ? (
+      {sortedBoards.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500 mb-4">
             {activeTab === "normal"
@@ -191,22 +241,35 @@ export default function BoardList({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-          {boards?.map((board) => (
-            <BoardCard
-              key={board.id}
-              board={board}
-              onSelect={() => onBoardSelect?.(board)}
-              mode={activeTab}
-              onPermanentDelete={
-                activeTab === "deleted" ? onPermanentDeleteBoard : undefined
-              }
-              isSelected={
-                currentBoardSlug?.toUpperCase() === board.slug?.toUpperCase()
-              }
-            />
-          ))}
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sortedBoards.map((b) => b.id)}
+            strategy={rectSortingStrategy}
+          >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {sortedBoards.map((board) => (
+                <SortableBoardCard
+                  key={board.id}
+                  board={board}
+                  onSelect={() => onBoardSelect?.(board)}
+                  mode={activeTab}
+                  onPermanentDelete={
+                    activeTab === "deleted" ? onPermanentDeleteBoard : undefined
+                  }
+                  isSelected={
+                    currentBoardSlug?.toUpperCase() ===
+                    board.slug?.toUpperCase()
+                  }
+                  isDragEnabled={activeTab === "normal"}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

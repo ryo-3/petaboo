@@ -84,7 +84,7 @@ export default function BoardCard({
       >
         {/* 選択状態の場合はペンアイコンを表示 */}
         {isSelected && mode !== "deleted" && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-1 right-1">
             <div className="flex items-center justify-center size-6 rounded-full bg-light-Blue text-white">
               <PenIcon className="size-3" />
             </div>

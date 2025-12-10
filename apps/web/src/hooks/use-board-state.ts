@@ -45,11 +45,6 @@ export function useBoardState() {
       setActiveTaskTabInternal((prev) => {
         const next = typeof newTab === "function" ? newTab(prev) : newTab;
         if (prev !== next) {
-          console.log("🔄 [useBoardState] activeTaskTab変更", {
-            from: prev,
-            to: next,
-            stack: new Error().stack?.split("\n").slice(2, 6).join("\n"),
-          });
           // sessionStorageに保存
           if (typeof window !== "undefined") {
             sessionStorage.setItem("activeTaskTab", next);
@@ -362,10 +357,7 @@ export function useBoardState() {
         title: "",
         description: null,
         displayId: "new", // 新規作成を示す特別なID（URL更新スキップ用）
-        status:
-          activeTaskTabRef.current === "deleted"
-            ? "todo"
-            : activeTaskTabRef.current, // 削除済みタブの場合は未着手にする
+        status: "todo", // 新規作成時は常に未着手
         priority: "medium",
         dueDate: null,
         categoryId: null,

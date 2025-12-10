@@ -604,10 +604,6 @@ export function useRestoreMemo(options?: {
               return [...oldMemos, restoredMemo as unknown as Memo];
             },
           );
-          console.log("🔄 [useRestoreMemo] メモ一覧に追加", {
-            displayId: itemId,
-            memoId: restoredMemo.id,
-          });
         }
 
         if (boardId) {

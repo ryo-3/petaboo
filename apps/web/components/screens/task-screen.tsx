@@ -33,11 +33,7 @@ import { useTeamDetail } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
 import { useHeaderControlPanel } from "@/src/contexts/header-control-panel-context";
 import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
-import {
-  useBoards,
-  useItemBoards,
-  useTeamItemBoards,
-} from "@/src/hooks/use-boards";
+import { useBoards } from "@/src/hooks/use-boards";
 import { useTeamBoards } from "@/src/hooks/use-team-boards";
 import { useTags } from "@/src/hooks/use-tags";
 import { useTeamTags } from "@/src/hooks/use-team-tags";
@@ -247,21 +243,6 @@ function TaskScreen({
 
   const tags = teamMode ? teamTags : personalTags;
 
-  // 選択中のタスクに紐づくボード情報を取得（フェーズ1対応）
-  const selectedTaskId = selectedTask?.displayId;
-  const { data: personalTaskItemBoards = [] } = useItemBoards(
-    "task",
-    teamMode ? undefined : selectedTaskId,
-  );
-
-  const { data: teamTaskItemBoards = [] } = useTeamItemBoards(
-    teamMode ? teamId || 0 : 0,
-    "task",
-    teamMode ? selectedTaskId : undefined,
-  );
-
-  const itemBoards = teamMode ? teamTaskItemBoards : personalTaskItemBoards;
-
   // 削除済みタスクの完全削除フック
   const permanentDeleteTask = usePermanentDeleteTask();
 
@@ -274,6 +255,25 @@ function TaskScreen({
   const { data: allBoardItems } = useAllBoardItems(
     teamMode ? teamId : undefined,
   );
+
+  // 選択中のタスクに紐づくボード情報を取得（allBoardItemsから計算して一覧と整合性を確保）
+  const itemBoards = useMemo(() => {
+    if (!selectedTask || !allBoardItems || !boards) return [];
+
+    const displayId = selectedTask.displayId || "";
+
+    // allBoardItemsからこのタスクに紐づくボードをフィルタリング
+    const taskBoardItems = allBoardItems.filter(
+      (item) => item.itemType === "task" && item.displayId === displayId,
+    );
+
+    // ボード情報を取得
+    return taskBoardItems
+      .map((item) => boards.find((board) => board.id === item.boardId))
+      .filter(
+        (board): board is NonNullable<typeof board> => board !== undefined,
+      );
+  }, [selectedTask, allBoardItems, boards]);
 
   // 全タスクの添付ファイルを取得（サムネイル表示用）
   const { data: allTaskAttachments } = useAllAttachments(

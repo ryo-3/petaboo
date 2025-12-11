@@ -105,35 +105,47 @@ export function useCreateTagging() {
 
       const newTagging = result as Tagging;
 
-      // 全タグ付け情報に新しいタグ付けを追加
-      queryClient.setQueryData(
+      // APIはtag情報を含まないので、tagsキャッシュから取得してマージ
+      const allTags = queryClient.getQueryData<Tag[]>(["tags", {}]) || [];
+      const tag = allTags.find((t) => t.id === newTagging.tagId);
+      const taggingWithTag: Tagging = tag ? { ...newTagging, tag } : newTagging;
+
+      // 1. 全タグ付け情報のキャッシュを更新（一覧表示用）
+      queryClient.setQueryData<Tagging[]>(
         ["taggings", "all"],
-        (oldTaggings: Tagging[] | undefined) => {
-          if (!oldTaggings) return [newTagging];
-          return [...oldTaggings, newTagging];
+        (oldTaggings) => {
+          if (!oldTaggings) return [taggingWithTag];
+          const exists = oldTaggings.some((t) => t.id === taggingWithTag.id);
+          if (exists) return oldTaggings;
+          return [...oldTaggings, taggingWithTag];
         },
       );
 
-      // 全タグ付けクエリを強制再取得（キャッシュ更新を確実に反映）
-      queryClient.invalidateQueries({
-        queryKey: ["taggings", "all"],
-        refetchType: "active",
-      });
-
-      // 特定のアイテムタイプ・IDのタグ付け情報も無効化
-      queryClient.invalidateQueries({
-        queryKey: [
-          "taggings",
-          {
-            targetType: taggingData.targetType,
-            targetDisplayId: taggingData.targetDisplayId,
+      // 2. 該当アイテムのタグ付けキャッシュを更新（エディター用）
+      // キャッシュキーがオブジェクトなのでpredicateで部分一致させる
+      queryClient.setQueriesData<Tagging[]>(
+        {
+          predicate: (query) => {
+            const key = query.queryKey;
+            if (key[0] !== "taggings") return false;
+            // "all"キャッシュは既に更新済みなのでスキップ
+            if (key[1] === "all") return false;
+            const opts = key[1] as Record<string, unknown> | undefined;
+            if (!opts || typeof opts !== "object") return false;
+            return (
+              opts.targetType === taggingData.targetType &&
+              opts.targetDisplayId === taggingData.targetDisplayId
+            );
           },
-        ],
-      });
-    },
-    onError: () => {
-      // エラーをサイレントに処理（ログ出力を抑制）
-      // console.error('タグ付けエラー:', error);
+        },
+        (oldTaggings) => {
+          if (!oldTaggings) return [taggingWithTag];
+          // 重複チェック
+          const exists = oldTaggings.some((t) => t.id === taggingWithTag.id);
+          if (exists) return oldTaggings;
+          return [...oldTaggings, taggingWithTag];
+        },
+      );
     },
   });
 }
@@ -148,16 +160,16 @@ export function useDeleteTagging() {
       await taggingsApi.deleteTagging(id, token || undefined);
     },
     onSuccess: (_, id) => {
-      // 全タグ付け情報から削除されたタグ付けを除去
-      queryClient.setQueryData(
-        ["taggings", "all"],
-        (oldTaggings: Tagging[] | undefined) => {
+      // 全てのtaggingsキャッシュから削除されたタグ付けを除去
+      queryClient.setQueriesData<Tagging[]>(
+        {
+          predicate: (query) => query.queryKey[0] === "taggings",
+        },
+        (oldTaggings) => {
           if (!oldTaggings) return [];
           return oldTaggings.filter((tagging) => tagging.id !== id);
         },
       );
-      // 汎用タグ付けクエリを無効化
-      queryClient.invalidateQueries({ queryKey: ["taggings"], exact: false });
     },
   });
 }
@@ -187,11 +199,11 @@ export function useDeleteTaggingsByTag() {
         teamId,
       );
     },
-    onSuccess: (_, { tagId, targetType, targetDisplayId, teamId }) => {
-      // 全タグ付け情報から条件に一致するタグ付けを除去
-      queryClient.setQueryData(
+    onSuccess: (_, { tagId, targetType, targetDisplayId }) => {
+      // 1. 全タグ付け情報のキャッシュを更新（一覧表示用）
+      queryClient.setQueryData<Tagging[]>(
         ["taggings", "all"],
-        (oldTaggings: Tagging[] | undefined) => {
+        (oldTaggings) => {
           if (!oldTaggings) return [];
           return oldTaggings.filter((tagging) => {
             if (tagging.tagId !== tagId) return true;
@@ -202,14 +214,31 @@ export function useDeleteTaggingsByTag() {
           });
         },
       );
-      // 特定条件のタグ付けクエリを無効化
+
+      // 2. 該当アイテムのタグ付けキャッシュから条件に一致するタグ付けを除去（エディター用）
+      // predicateで部分一致させる
       if (targetType && targetDisplayId) {
-        queryClient.invalidateQueries({
-          queryKey: ["taggings", { targetType, targetDisplayId, teamId }],
-        });
+        queryClient.setQueriesData<Tagging[]>(
+          {
+            predicate: (query) => {
+              const key = query.queryKey;
+              if (key[0] !== "taggings") return false;
+              // "all"キャッシュは既に更新済みなのでスキップ
+              if (key[1] === "all") return false;
+              const opts = key[1] as Record<string, unknown> | undefined;
+              if (!opts || typeof opts !== "object") return false;
+              return (
+                opts.targetType === targetType &&
+                opts.targetDisplayId === targetDisplayId
+              );
+            },
+          },
+          (oldTaggings) => {
+            if (!oldTaggings) return [];
+            return oldTaggings.filter((tagging) => tagging.tagId !== tagId);
+          },
+        );
       }
-      // 汎用タグ付けクエリを無効化
-      queryClient.invalidateQueries({ queryKey: ["taggings"], exact: false });
     },
   });
 }

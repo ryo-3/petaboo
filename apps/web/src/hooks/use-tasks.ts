@@ -107,12 +107,6 @@ export function useCreateTask(options?: {
             },
           );
         }
-        // チームボード - 該当ボードのみ
-        if (boardId) {
-          queryClient.invalidateQueries({
-            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-          });
-        }
       } else {
         // 個人モード: updateItemCacheで統一管理
         updateItemCache({
@@ -411,48 +405,6 @@ export function useDeleteTask(options?: {
             },
           );
         }
-
-        // 紐づいているチームボードのアイテムキャッシュのみ無効化・再取得
-        const deletedTaskDisplayId = deletedTask?.displayId || id.toString();
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          "task",
-          deletedTaskDisplayId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-          });
-        } else {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-        }
-        // チームモード: タグ付け情報を無効化
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
         // 個人モード: updateItemCacheで統一管理
         const deletedTask = queryClient
@@ -467,8 +419,6 @@ export function useDeleteTask(options?: {
             item: deletedTask,
           });
         }
-        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
     },
     onError: (error) => {
@@ -649,82 +599,6 @@ export function useRestoreTask(options?: {
             },
           );
         }
-
-        queryClient.refetchQueries({
-          queryKey: ["boards", "all-items", teamId],
-        });
-
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          "task",
-          displayId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.invalidateQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-            queryClient.refetchQueries({
-              queryKey: [
-                "team-board-deleted-items",
-                teamId.toString(),
-                board.id,
-              ],
-            });
-          });
-        } else {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-board-deleted-items" &&
-                key[1] === teamId.toString()
-              );
-            },
-          });
-        }
-        // チームモード: タグ付け情報を無効化
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
         // 個人モード: updateItemCacheで統一管理
         const deletedTask = queryClient
@@ -740,8 +614,6 @@ export function useRestoreTask(options?: {
             boardId,
           });
         }
-        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
     },
     onError: (error) => {

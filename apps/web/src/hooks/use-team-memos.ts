@@ -60,10 +60,11 @@ export function useTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamMemo[]>;
     },
     enabled: !!teamId,
-    placeholderData: [], // 初回も即座に空配列を表示
-    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
-    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-    refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -94,10 +95,11 @@ export function useDeletedTeamMemos(teamId?: number) {
       return response.json() as Promise<TeamDeletedMemo[]>;
     },
     enabled: !!teamId,
-    placeholderData: [], // 初回も即座に空配列を表示
-    keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
-    refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
-    refetchIntervalInBackground: true, // バックグラウンドタブでも定期取得を継続
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchInterval: 60 * 1000,
+    refetchIntervalInBackground: true,
   });
 }
 
@@ -134,8 +136,6 @@ export function useCreateTeamMemo(teamId?: number) {
         item: newMemo,
         teamId,
       });
-      // チームタグ付け情報も無効化（新しいメモにタグが付いている可能性）
-      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }
@@ -198,8 +198,6 @@ export function useUpdateTeamMemo(teamId?: number) {
         item: updatedMemo,
         teamId,
       });
-      // チームタグ付け情報も無効化（メモ更新時にタグ情報も更新される可能性）
-      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
     onError: (error: ConflictError) => {
       if (error.status === 409 && error.latestData) {

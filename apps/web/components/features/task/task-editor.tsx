@@ -444,7 +444,7 @@ function TaskEditor({
           ),
         );
 
-    const tags = taggingsToUse
+    return taggingsToUse
       .filter(
         (t) =>
           t.targetType === "task" &&
@@ -452,8 +452,6 @@ function TaskEditor({
       )
       .map((t) => t.tag)
       .filter(Boolean) as Tag[];
-
-    return tags;
   }, [task, liveTaggings, preloadedTaggings, liveTeamTaggings, teamMode]);
 
   // タグ操作用のmutation（既存API使用）
@@ -1089,12 +1087,16 @@ function TaskEditor({
 
       if (targetId && localTags.length > 0) {
         await updateTaggings(targetId);
+        // タグ保存後、手動変更フラグをリセット
+        setHasManualTagChanges(false);
       }
     } else if (hasTagChanges && task && task.id !== 0) {
       // タグの変更がある場合は保存（既存タスク）
       const taskId =
         (teamMode ? (task.displayId ?? task.displayId) : task.displayId) || "";
       await updateTaggings(taskId);
+      // タグ保存後、手動変更フラグをリセット
+      setHasManualTagChanges(false);
     }
 
     // 削除予定の画像を削除

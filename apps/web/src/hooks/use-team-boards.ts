@@ -97,9 +97,11 @@ export function useTeamBoards(
     },
     {
       enabled: isLoaded && teamId !== null && teamId > 0,
-      placeholderData: [], // 初回も即座に空配列を表示
-      keepPreviousData: true, // 前回のデータを表示しながら新データをフェッチ
-      refetchInterval: 60 * 1000, // チームモード: 1分ごとに再取得（他メンバーの変更を反映）
+      staleTime: 30 * 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: true,
+      refetchInterval: 60 * 1000,
+      refetchIntervalInBackground: true,
     },
   );
 }
@@ -146,7 +148,6 @@ export function useCreateTeamBoard() {
       return response.json();
     },
     onSuccess: (newBoard, { teamId }) => {
-      // 新しいボードは通常状態で作成されるため、normal状態のボード一覧に追加
       queryClient.setQueryData<BoardWithStats[]>(
         ["team-boards", teamId, "normal"],
         (oldBoards) => {
@@ -154,13 +155,6 @@ export function useCreateTeamBoard() {
           return [...oldBoards, newBoard];
         },
       );
-      // 他のステータスのキャッシュも無効化（統計情報の整合性のため）
-      queryClient.invalidateQueries({
-        queryKey: ["team-boards", teamId, "completed"],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["team-boards", teamId, "deleted"],
-      });
     },
     onError: (error) => {
       console.error("チームボード作成に失敗しました:", error);
@@ -207,16 +201,17 @@ export function useUpdateTeamBoard(teamId: number) {
 
       return response.json();
     },
-    onSuccess: () => {
-      // 全ステータスのキャッシュを無効化
+    onSuccess: (updatedBoard, { id, data }) => {
       ["normal", "completed", "deleted"].forEach((status) => {
-        queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId, status],
-        });
-      });
-      // ボード詳細のキャッシュも無効化
-      queryClient.invalidateQueries({
-        queryKey: ["team-board", teamId],
+        queryClient.setQueryData<BoardWithStats[]>(
+          ["team-boards", teamId, status],
+          (oldBoards) => {
+            if (!oldBoards) return oldBoards;
+            return oldBoards.map((board) =>
+              board.id === id ? { ...board, ...data } : board,
+            );
+          },
+        );
       });
       showToast("ボードが更新されました", "success");
     },
@@ -291,13 +286,33 @@ export function useToggleTeamBoardCompletion(teamId: number) {
 
       return response.json();
     },
-    onSuccess: () => {
-      // 全ステータスのキャッシュを無効化
-      ["normal", "completed", "deleted"].forEach((status) => {
-        queryClient.invalidateQueries({
-          queryKey: ["team-boards", teamId, status],
-        });
-      });
+    onSuccess: (result, boardId) => {
+      const isCompleted = result.isCompleted;
+      const fromStatus = isCompleted ? "normal" : "completed";
+      const toStatus = isCompleted ? "completed" : "normal";
+
+      // 移動元から削除
+      let movedBoard: BoardWithStats | undefined;
+      queryClient.setQueryData<BoardWithStats[]>(
+        ["team-boards", teamId, fromStatus],
+        (oldBoards) => {
+          if (!oldBoards) return oldBoards;
+          movedBoard = oldBoards.find((b) => b.id === boardId);
+          return oldBoards.filter((b) => b.id !== boardId);
+        },
+      );
+
+      // 移動先に追加
+      if (movedBoard) {
+        queryClient.setQueryData<BoardWithStats[]>(
+          ["team-boards", teamId, toStatus],
+          (oldBoards) => {
+            if (!oldBoards) return [{ ...movedBoard!, isCompleted }];
+            return [...oldBoards, { ...movedBoard!, isCompleted }];
+          },
+        );
+      }
+
       showToast("ボードの完了状態が更新されました", "success");
     },
     onError: (error) => {

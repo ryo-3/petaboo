@@ -23,8 +23,10 @@ export function useTeamTaggings(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { enabled: _enabled, ...cacheKeyOptions } = options;
 
+  const queryKey = ["team-taggings", teamId, cacheKeyOptions];
+
   return useQuery({
-    queryKey: ["team-taggings", teamId, cacheKeyOptions],
+    queryKey,
     queryFn: async () => {
       const token = await getToken();
       const params = new URLSearchParams();
@@ -119,22 +121,28 @@ export function useCreateTeamTagging(teamId: number) {
       return data as Tagging;
     },
     onSuccess: (newTagging) => {
-      // 関連するキャッシュを無効化
-      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
+      // チームタグキャッシュから tag 情報を取得してマージ
+      // キャッシュキーは ["team-tags", teamId, {}] の形式
+      const allTeamTags =
+        queryClient.getQueryData<Tag[]>(["team-tags", teamId, {}]) || [];
+      const tag = allTeamTags.find((t) => t.id === newTagging.tagId);
+      const taggingWithTag: Tagging = tag ? { ...newTagging, tag } : newTagging;
 
-      // 特定のアイテムのタグも無効化
-      if (newTagging.targetType && newTagging.targetDisplayId) {
-        queryClient.invalidateQueries({
-          queryKey: [
-            "team-taggings",
-            teamId,
-            {
-              targetType: newTagging.targetType,
-              targetDisplayId: newTagging.targetDisplayId,
-            },
-          ],
-        });
-      }
+      // 全てのチームタグ付けキャッシュを更新（predicateで部分一致）
+      queryClient.setQueriesData<Tagging[]>(
+        {
+          predicate: (query) => {
+            const key = query.queryKey;
+            return key[0] === "team-taggings" && key[1] === teamId;
+          },
+        },
+        (oldTaggings) => {
+          if (!oldTaggings) return [taggingWithTag];
+          const exists = oldTaggings.some((t) => t.id === taggingWithTag.id);
+          if (exists) return oldTaggings;
+          return [...oldTaggings, taggingWithTag];
+        },
+      );
     },
   });
 }
@@ -165,17 +173,19 @@ export function useDeleteTeamTagging(teamId: number) {
       }
     },
     onSuccess: (_, deletedId) => {
-      // チームタグ付けキャッシュから削除されたタグ付けを即座に除去
+      // チームタグ付けキャッシュから削除されたタグ付けを即座に除去（predicateで部分一致）
       queryClient.setQueriesData<Tagging[]>(
-        { queryKey: ["team-taggings", teamId] },
+        {
+          predicate: (query) => {
+            const key = query.queryKey;
+            return key[0] === "team-taggings" && key[1] === teamId;
+          },
+        },
         (oldTaggings) => {
           if (!oldTaggings) return [];
           return oldTaggings.filter((tagging) => tagging.id !== deletedId);
         },
       );
-
-      // 関連するキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }
@@ -211,9 +221,14 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
       }
     },
     onSuccess: (_, { tagId, targetType, targetDisplayId }) => {
-      // チームタグ付けキャッシュから該当タグ付けを除去
+      // チームタグ付けキャッシュから該当タグ付けを除去（predicateで部分一致）
       queryClient.setQueriesData<Tagging[]>(
-        { queryKey: ["team-taggings", teamId] },
+        {
+          predicate: (query) => {
+            const key = query.queryKey;
+            return key[0] === "team-taggings" && key[1] === teamId;
+          },
+        },
         (oldTaggings) => {
           if (!oldTaggings) return [];
           return oldTaggings.filter(
@@ -226,9 +241,6 @@ export function useDeleteTeamTaggingByTag(teamId: number) {
           );
         },
       );
-
-      // 関連するキャッシュも無効化
-      queryClient.invalidateQueries({ queryKey: ["team-taggings", teamId] });
     },
   });
 }

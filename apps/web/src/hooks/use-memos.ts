@@ -164,9 +164,6 @@ export function useCreateMemo(options?: {
               return oldData;
             },
           );
-          queryClient.invalidateQueries({
-            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-          });
         }
       } else {
         // 個人モード: updateItemCacheで統一管理
@@ -298,20 +295,6 @@ export function useUpdateMemo(options?: {
             },
           );
         }
-
-        setTimeout(() => {
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as string[];
-              return key[0] === "team-boards" && key[1] === teamId.toString();
-            },
-          });
-        }, 1000);
-        // チームモード: タグ付け情報を無効化
-        queryClient.invalidateQueries({
-          queryKey: ["taggings"],
-          exact: false,
-        });
       } else {
         // 個人モード: updateItemCacheで統一管理
         // APIが完全なデータを返した場合はそれを使用、不完全な場合はマージ
@@ -343,11 +326,6 @@ export function useUpdateMemo(options?: {
           operation: "update",
           item: mergedMemo,
           boardId,
-        });
-        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
-        queryClient.invalidateQueries({
-          queryKey: ["taggings"],
-          exact: false,
         });
       }
     },
@@ -426,56 +404,6 @@ export function useDeleteMemo(options?: {
             },
           );
         }
-
-        queryClient.invalidateQueries({
-          predicate: (query) => {
-            const key = query.queryKey as string[];
-            return (
-              key[0] === "team-deleted-memos" && key[1] === teamId?.toString()
-            );
-          },
-        });
-
-        const deletedMemoDisplayId = deletedMemo?.displayId || id.toString();
-        const teamItemBoards = queryClient.getQueryData<{ id: number }[]>([
-          "team-item-boards",
-          teamId,
-          "memo",
-          deletedMemoDisplayId,
-        ]);
-        if (teamItemBoards && teamItemBoards.length > 0) {
-          teamItemBoards.forEach((board) => {
-            queryClient.invalidateQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-            queryClient.refetchQueries({
-              queryKey: ["team-boards", teamId.toString(), board.id, "items"],
-            });
-          });
-        } else {
-          queryClient.invalidateQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-          queryClient.refetchQueries({
-            predicate: (query) => {
-              const key = query.queryKey as unknown[];
-              return (
-                key[0] === "team-boards" &&
-                key[1] === teamId.toString() &&
-                key[3] === "items"
-              );
-            },
-          });
-        }
-        // チームモード: タグ付け情報を無効化
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       } else {
         // 個人モード: updateItemCacheで統一管理
         const deletedMemo = queryClient
@@ -490,8 +418,6 @@ export function useDeleteMemo(options?: {
             item: deletedMemo,
           });
         }
-        // 個人モード: タグ付け情報を無効化（タグは独立した操作のため許可）
-        queryClient.invalidateQueries({ queryKey: ["taggings", "all"] });
       }
     },
   });
@@ -628,9 +554,6 @@ export function useRestoreMemo(options?: {
               },
             );
           }
-          queryClient.invalidateQueries({
-            queryKey: ["team-boards", teamId.toString(), boardId, "items"],
-          });
         }
       } else {
         // 個人モード: updateItemCacheで統一管理

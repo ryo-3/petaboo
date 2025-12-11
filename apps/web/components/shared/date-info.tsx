@@ -107,6 +107,11 @@ function StatusDisplay({
 
   const latestStatusChange = history && history.length > 0 ? history[0] : null;
 
+  // 履歴がある場合は最新の履歴のステータスを使用、なければ現在のステータス
+  const displayStatus = latestStatusChange
+    ? latestStatusChange.toStatus
+    : currentStatus;
+
   return (
     <span className="relative flex items-center gap-1.5">
       <button
@@ -115,10 +120,10 @@ function StatusDisplay({
         className="flex items-center gap-1.5 hover:opacity-70 transition-opacity cursor-pointer"
       >
         <span
-          className={`size-2.5 rounded-full ${getTaskStatusDotColor(currentStatus as TaskStatus)}`}
+          className={`size-2.5 rounded-full ${getTaskStatusDotColor(displayStatus as TaskStatus)}`}
         />
         <span className="text-gray-600">
-          {getTaskTabLabel(currentStatus as TaskStatus)}
+          {getTaskTabLabel(displayStatus as TaskStatus)}
         </span>
         {isMounted &&
           latestStatusChange &&

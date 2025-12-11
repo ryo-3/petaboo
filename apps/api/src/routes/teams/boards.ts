@@ -778,6 +778,7 @@ export function createTeamBoardsAPI(app: AppType) {
             content: item.team_memos
               ? {
                   id: item.team_memos.id,
+                  userId: item.team_memos.userId,
                   title: item.team_memos.title,
                   content: item.team_memos.content,
                   displayId: item.team_memos.displayId,
@@ -790,6 +791,7 @@ export function createTeamBoardsAPI(app: AppType) {
               : item.team_tasks
                 ? {
                     id: item.team_tasks.id,
+                    userId: item.team_tasks.userId,
                     title: item.team_tasks.title,
                     description: item.team_tasks.description,
                     status: item.team_tasks.status,

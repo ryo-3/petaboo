@@ -571,6 +571,19 @@ export function useSimpleItemSave<T extends UnifiedItem>({
         setInitialTitle(title.trim() || "無題");
         setInitialContent(content.trim());
         if (itemType === "task") {
+          // ステータスが変更された場合、履歴キャッシュを無効化
+          if (status !== initialStatus && item?.id) {
+            if (teamMode && teamId) {
+              queryClient.invalidateQueries({
+                queryKey: ["team-task-status-history", teamId, item.id],
+              });
+            } else {
+              queryClient.invalidateQueries({
+                queryKey: ["task-status-history", item.id],
+              });
+            }
+          }
+          // 初期状態更新前にinitialStatusを使った比較が終わっているので、ここで更新
           setInitialPriority(priority);
           setInitialStatus(status);
           if (teamMode) {

@@ -489,6 +489,7 @@ function BoardRightPanel({
                 task={selectedTask}
                 initialBoardId={boardId}
                 isFromBoardDetail={true}
+                showDateAtBottom={true}
                 {...toCreatorProps(selectedTaskCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}
@@ -529,6 +530,7 @@ function BoardRightPanel({
                 task={selectedTask}
                 initialBoardId={boardId}
                 isFromBoardDetail={true}
+                showDateAtBottom={true}
                 {...toCreatorProps(selectedTaskCreatorInfo)}
                 preloadedTags={tags || []}
                 preloadedBoards={allBoards || []}

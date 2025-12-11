@@ -10,6 +10,7 @@ import {
   getTaskStatusDotColor,
   getTaskStatusColor,
 } from "@/src/config/taskTabConfig";
+import Tooltip from "@/components/ui/base/tooltip";
 
 interface DateInfoProps {
   item?: Memo | Task | DeletedMemo | DeletedTask | null;
@@ -61,11 +62,13 @@ function StatusDisplay({
   currentStatus,
   teamMode,
   teamId,
+  taskCreatorId,
 }: {
   taskId: number | null;
   currentStatus: string;
   teamMode: boolean;
   teamId?: number;
+  taskCreatorId?: string;
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -117,6 +120,21 @@ function StatusDisplay({
         <span className="text-gray-600">
           {getTaskTabLabel(currentStatus as TaskStatus)}
         </span>
+        {isMounted &&
+          latestStatusChange &&
+          teamMode &&
+          latestStatusChange.userName &&
+          latestStatusChange.userId !== taskCreatorId && (
+            <Tooltip text={latestStatusChange.userName} position="top">
+              <div
+                className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-medium text-xs ${
+                  latestStatusChange.userAvatarColor || "bg-blue-500"
+                }`}
+              >
+                {latestStatusChange.userName.charAt(0).toUpperCase()}
+              </div>
+            </Tooltip>
+          )}
         {isMounted && latestStatusChange && (
           <span className="text-gray-400">
             {formatStatusDateTime(latestStatusChange.changedAt)}
@@ -127,7 +145,7 @@ function StatusDisplay({
       {isOpen && (
         <div
           ref={popoverRef}
-          className="absolute top-full right-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[200px] max-w-[280px]"
+          className="absolute top-full right-0 mt-1 z-50 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[280px] max-w-[360px]"
         >
           <div className="p-2 border-b border-gray-100">
             <span className="text-xs font-medium text-gray-700">
@@ -158,11 +176,13 @@ function StatusDisplay({
                     <span className="text-gray-600 whitespace-nowrap">
                       {formatHistoryDateTime(item.changedAt)}
                     </span>
-                    {teamMode && item.userName && (
-                      <span className="text-gray-400 truncate">
-                        {item.userName}
-                      </span>
-                    )}
+                    {teamMode &&
+                      item.userName &&
+                      item.userId !== taskCreatorId && (
+                        <span className="text-gray-400 truncate">
+                          {item.userName}
+                        </span>
+                      )}
                   </div>
                 ))}
               </div>
@@ -220,13 +240,38 @@ function DateInfo({
           {avatar}
           <span>{formatDate(item.createdAt)}</span>
         </span>
-        {showEditTime && <span>編集 {formatDate(latestEditTime)}</span>}
+        {showEditTime && (
+          <span className="flex items-center gap-1">
+            <span>編集</span>
+            {/* 編集者が作成者と異なる場合のみアバター表示 */}
+            {teamMode &&
+              "updatedByName" in item &&
+              item.updatedByName &&
+              "updatedBy" in item &&
+              "userId" in item &&
+              item.updatedBy !== item.userId && (
+                <Tooltip text={item.updatedByName} position="top">
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-medium text-xs ${
+                      ("updatedByAvatarColor" in item &&
+                        item.updatedByAvatarColor) ||
+                      "bg-blue-500"
+                    }`}
+                  >
+                    {item.updatedByName.charAt(0).toUpperCase()}
+                  </div>
+                </Tooltip>
+              )}
+            <span>{formatDate(latestEditTime)}</span>
+          </span>
+        )}
         {showStatus && isTask && currentStatus && (
           <StatusDisplay
             taskId={taskId}
             currentStatus={currentStatus}
             teamMode={teamMode}
             teamId={teamId}
+            taskCreatorId={"userId" in item ? item.userId : undefined}
           />
         )}
       </div>

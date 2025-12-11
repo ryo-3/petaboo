@@ -66,5 +66,7 @@ export interface TaskStatusHistoryItem {
   fromStatus: TaskStatus | null;
   toStatus: TaskStatus;
   changedAt: number; // Unix timestamp
+  userId?: string; // チームのみ（変更者のユーザーID）
   userName?: string | null; // チームのみ（変更者名）
+  userAvatarColor?: string | null; // チームのみ（変更者のアバター色）
 }

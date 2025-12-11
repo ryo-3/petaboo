@@ -16,6 +16,7 @@ export const teamTasks = sqliteTable("team_tasks", {
   assigneeId: text("assignee_id"),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at"),
+  updatedBy: text("updated_by"), // 最終編集者のユーザーID
   deletedAt: integer("deleted_at"), // 論理削除用
 });
 

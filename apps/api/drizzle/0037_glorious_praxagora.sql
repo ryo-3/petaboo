@@ -1,0 +1,1 @@
+ALTER TABLE `team_tasks` ADD `updated_by` text;

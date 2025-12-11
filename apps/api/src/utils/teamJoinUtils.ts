@@ -45,6 +45,7 @@ export function getTeamTaskSelectFields() {
     assigneeId: teamTasks.assigneeId,
     createdAt: teamTasks.createdAt,
     updatedAt: teamTasks.updatedAt,
+    updatedBy: teamTasks.updatedBy,
     createdBy: teamMembers.displayName,
     avatarColor: teamMembers.avatarColor,
   };

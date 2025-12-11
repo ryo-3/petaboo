@@ -43,10 +43,13 @@ const TeamTaskSchema = z.object({
   assigneeId: z.string().nullable(),
   createdAt: z.number(),
   updatedAt: z.number().nullable(),
+  updatedBy: z.string().nullable(), // 最終編集者のユーザーID
   createdBy: z.string().nullable(), // 作成者の表示名
   avatarColor: z.string().nullable(), // 作成者のアバター色
   assigneeName: z.string().nullable(), // 担当者の表示名
   assigneeAvatarColor: z.string().nullable(), // 担当者のアバター色
+  updatedByName: z.string().nullable(), // 最終編集者の表示名
+  updatedByAvatarColor: z.string().nullable(), // 最終編集者のアバター色
   commentCount: z.number().optional(), // コメント数
 });
 
@@ -151,12 +154,16 @@ app.openapi(
     try {
       // 担当者用のteamMembersテーブル別名
       const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+      // 最終編集者用のteamMembersテーブル別名
+      const updatedByMembers = aliasedTable(teamMembers, "updated_by_members");
 
       const result = await db
         .select({
           ...getTeamTaskSelectFields(),
           assigneeName: assigneeMembers.displayName,
           assigneeAvatarColor: assigneeMembers.avatarColor,
+          updatedByName: updatedByMembers.displayName,
+          updatedByAvatarColor: updatedByMembers.avatarColor,
           commentCount: sql<number>`(
           SELECT COUNT(*)
           FROM ${teamComments}
@@ -172,6 +179,13 @@ app.openapi(
           and(
             eq(teamTasks.assigneeId, assigneeMembers.userId),
             eq(teamTasks.teamId, assigneeMembers.teamId),
+          ),
+        )
+        .leftJoin(
+          updatedByMembers,
+          and(
+            eq(teamTasks.updatedBy, updatedByMembers.userId),
+            eq(teamTasks.teamId, updatedByMembers.teamId),
           ),
         )
         .where(and(eq(teamTasks.teamId, teamId), isNull(teamTasks.deletedAt)))
@@ -328,12 +342,15 @@ app.openapi(
 
     // 作成されたタスクを取得して返す（作成者・担当者情報付き）
     const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+    const updatedByMembers = aliasedTable(teamMembers, "updated_by_members");
 
     const newTask = await db
       .select({
         ...getTeamTaskSelectFields(),
         assigneeName: assigneeMembers.displayName,
         assigneeAvatarColor: assigneeMembers.avatarColor,
+        updatedByName: updatedByMembers.displayName,
+        updatedByAvatarColor: updatedByMembers.avatarColor,
       })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
@@ -342,6 +359,13 @@ app.openapi(
         and(
           eq(teamTasks.assigneeId, assigneeMembers.userId),
           eq(teamTasks.teamId, assigneeMembers.teamId),
+        ),
+      )
+      .leftJoin(
+        updatedByMembers,
+        and(
+          eq(teamTasks.updatedBy, updatedByMembers.userId),
+          eq(teamTasks.teamId, updatedByMembers.teamId),
         ),
       )
       .where(eq(teamTasks.id, result[0].id))
@@ -520,12 +544,36 @@ app.openapi(
       }
     }
 
+    // ステータス変更のみかどうかをチェック
+    const isStatusOnlyChange =
+      rest.status !== undefined &&
+      rest.status !== existingTask.status &&
+      rest.title === existingTask.title &&
+      rest.description === existingTask.description &&
+      rest.priority === existingTask.priority &&
+      (rest.dueDate === undefined || rest.dueDate === existingTask.dueDate) &&
+      (rest.categoryId === undefined ||
+        rest.categoryId === existingTask.categoryId) &&
+      (rest.boardCategoryId === undefined ||
+        rest.boardCategoryId === existingTask.boardCategoryId) &&
+      (assigneeId === undefined || assigneeId === existingTask.assigneeId);
+
+    console.log(
+      `📝 [タスク更新] id=${id}, isStatusOnlyChange=${isStatusOnlyChange}`,
+    );
+
     const updateData = {
       ...rest,
       ...(assigneeId !== undefined
         ? { assigneeId: assigneeId === "" ? null : assigneeId }
         : {}),
-      updatedAt: Math.floor(Date.now() / 1000),
+      // ステータス変更のみの場合はupdatedAt/updatedByを更新しない
+      ...(!isStatusOnlyChange
+        ? {
+            updatedAt: Math.floor(Date.now() / 1000),
+            updatedBy: auth.userId,
+          }
+        : {}),
     };
 
     await db
@@ -547,12 +595,15 @@ app.openapi(
 
     // 更新後のタスクを取得して返す
     const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
+    const updatedByMembers = aliasedTable(teamMembers, "updated_by_members");
 
     const updatedTask = await db
       .select({
         ...getTeamTaskSelectFields(),
         assigneeName: assigneeMembers.displayName,
         assigneeAvatarColor: assigneeMembers.avatarColor,
+        updatedByName: updatedByMembers.displayName,
+        updatedByAvatarColor: updatedByMembers.avatarColor,
       })
       .from(teamTasks)
       .leftJoin(teamMembers, getTeamTaskMemberJoin())
@@ -561,6 +612,13 @@ app.openapi(
         and(
           eq(teamTasks.assigneeId, assigneeMembers.userId),
           eq(teamTasks.teamId, assigneeMembers.teamId),
+        ),
+      )
+      .leftJoin(
+        updatedByMembers,
+        and(
+          eq(teamTasks.updatedBy, updatedByMembers.userId),
+          eq(teamTasks.teamId, updatedByMembers.teamId),
         ),
       )
       .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
@@ -1103,7 +1161,9 @@ app.openapi(
                   fromStatus: z.string().nullable(),
                   toStatus: z.string(),
                   changedAt: z.number(),
+                  userId: z.string(),
                   userName: z.string().nullable(),
+                  userAvatarColor: z.string().nullable(),
                 }),
               ),
             }),
@@ -1169,7 +1229,9 @@ app.openapi(
         fromStatus: teamTaskStatusHistory.fromStatus,
         toStatus: teamTaskStatusHistory.toStatus,
         changedAt: teamTaskStatusHistory.changedAt,
+        userId: teamTaskStatusHistory.userId,
         userName: teamMembers.displayName,
+        userAvatarColor: teamMembers.avatarColor,
       })
       .from(teamTaskStatusHistory)
       .leftJoin(

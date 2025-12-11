@@ -2,7 +2,7 @@ import { OpenAPIHono, createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { tasks } from "../../db/schema/tasks";
+import { tasks, taskStatusHistory } from "../../db/schema/tasks";
 import { boardItems } from "../../db/schema/boards";
 import { taggings } from "../../db/schema/tags";
 import { attachments } from "../../db/schema/attachments";
@@ -391,12 +391,29 @@ app.openapi(
       );
     }
 
+    // ステータス変更履歴のため、まず既存タスクを取得
+    const existingTask = await db
+      .select()
+      .from(tasks)
+      .where(
+        and(
+          eq(tasks.id, id),
+          eq(tasks.userId, auth.userId),
+          isNull(tasks.deletedAt),
+        ),
+      )
+      .get();
+
+    if (!existingTask) {
+      return c.json({ error: "Task not found" }, 404);
+    }
+
     const updateData = {
       ...parsed.data,
       updatedAt: Math.floor(Date.now() / 1000),
     };
 
-    const result = await db
+    await db
       .update(tasks)
       .set(updateData)
       .where(
@@ -407,8 +424,15 @@ app.openapi(
         ),
       );
 
-    if (result.changes === 0) {
-      return c.json({ error: "Task not found" }, 404);
+    // ステータスが変更された場合、履歴を保存
+    if (parsed.data.status && parsed.data.status !== existingTask.status) {
+      await db.insert(taskStatusHistory).values({
+        taskId: id,
+        userId: auth.userId,
+        fromStatus: existingTask.status,
+        toStatus: parsed.data.status,
+        changedAt: Math.floor(Date.now() / 1000),
+      });
     }
 
     // 更新後のタスクを取得して返す
@@ -986,6 +1010,88 @@ app.openapi(
     } catch (error) {
       return c.json({ error: "Internal server error" }, 500);
     }
+  },
+);
+
+// GET /tasks/:id/status-history（ステータス変更履歴取得）
+app.openapi(
+  createRoute({
+    method: "get",
+    path: "/{id}/status-history",
+    request: {
+      params: z.object({
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Status change history",
+        content: {
+          "application/json": {
+            schema: z.object({
+              history: z.array(
+                z.object({
+                  id: z.number(),
+                  fromStatus: z.string().nullable(),
+                  toStatus: z.string(),
+                  changedAt: z.number(),
+                }),
+              ),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Task not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const db = c.get("db");
+    const { id } = c.req.valid("param");
+
+    // タスクの存在確認と所有者確認
+    const task = await db
+      .select()
+      .from(tasks)
+      .where(and(eq(tasks.id, id), eq(tasks.userId, auth.userId)))
+      .get();
+
+    if (!task) {
+      return c.json({ error: "Task not found" }, 404);
+    }
+
+    // 履歴を取得（新しい順）
+    const history = await db
+      .select({
+        id: taskStatusHistory.id,
+        fromStatus: taskStatusHistory.fromStatus,
+        toStatus: taskStatusHistory.toStatus,
+        changedAt: taskStatusHistory.changedAt,
+      })
+      .from(taskStatusHistory)
+      .where(eq(taskStatusHistory.taskId, id))
+      .orderBy(desc(taskStatusHistory.changedAt));
+
+    return c.json({ history }, 200);
   },
 );
 

@@ -4,7 +4,7 @@ import { eq, desc, and, sql, isNull, isNotNull } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm/alias";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
-import { teamTasks } from "../../db/schema/team/tasks";
+import { teamTasks, teamTaskStatusHistory } from "../../db/schema/team/tasks";
 import { teamMembers } from "../../db/schema/team/teams";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
@@ -466,20 +466,21 @@ app.openapi(
     // 楽観的ロック: updatedAt を抽出して競合チェック
     const { updatedAt: clientUpdatedAt, assigneeId, ...rest } = parsed.data;
 
+    // ステータス変更履歴のため、既存タスクを取得
+    const existingTask = await db
+      .select()
+      .from(teamTasks)
+      .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+      .get();
+
+    if (!existingTask) {
+      return c.json({ error: "Team task not found" }, 404);
+    }
+
     // 競合チェック（クライアントから updatedAt が送信された場合のみ）
     if (clientUpdatedAt !== undefined) {
-      const currentTask = await db
-        .select({ updatedAt: teamTasks.updatedAt })
-        .from(teamTasks)
-        .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
-        .get();
-
-      if (!currentTask) {
-        return c.json({ error: "Team task not found" }, 404);
-      }
-
       // DB の updatedAt とクライアントの updatedAt を比較
-      if (currentTask.updatedAt !== clientUpdatedAt) {
+      if (existingTask.updatedAt !== clientUpdatedAt) {
         // 最新データを取得して返す
         const assigneeMembers = aliasedTable(teamMembers, "assignee_members");
 
@@ -527,13 +528,21 @@ app.openapi(
       updatedAt: Math.floor(Date.now() / 1000),
     };
 
-    const result = await db
+    await db
       .update(teamTasks)
       .set(updateData)
       .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)));
 
-    if (result.changes === 0) {
-      return c.json({ error: "Team task not found" }, 404);
+    // ステータスが変更された場合、履歴を保存
+    if (rest.status && rest.status !== existingTask.status) {
+      await db.insert(teamTaskStatusHistory).values({
+        taskId: id,
+        teamId: teamId,
+        userId: auth.userId,
+        fromStatus: existingTask.status,
+        toStatus: rest.status,
+        changedAt: Math.floor(Date.now() / 1000),
+      });
     }
 
     // 更新後のタスクを取得して返す
@@ -1068,6 +1077,117 @@ app.openapi(
       console.error("チーム削除済みタスク完全削除エラー:", error);
       return c.json({ error: "Internal server error" }, 500);
     }
+  },
+);
+
+// GET /teams/:teamId/tasks/:id/status-history（チームタスクステータス変更履歴取得）
+app.openapi(
+  createRoute({
+    method: "get",
+    path: "/{teamId}/tasks/{id}/status-history",
+    request: {
+      params: z.object({
+        teamId: z.string().regex(/^\d+$/).transform(Number),
+        id: z.string().regex(/^\d+$/).transform(Number),
+      }),
+    },
+    responses: {
+      200: {
+        description: "Status change history",
+        content: {
+          "application/json": {
+            schema: z.object({
+              history: z.array(
+                z.object({
+                  id: z.number(),
+                  fromStatus: z.string().nullable(),
+                  toStatus: z.string(),
+                  changedAt: z.number(),
+                  userName: z.string().nullable(),
+                }),
+              ),
+            }),
+          },
+        },
+      },
+      401: {
+        description: "Unauthorized",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      403: {
+        description: "Not a team member",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+      404: {
+        description: "Task not found",
+        content: {
+          "application/json": {
+            schema: z.object({ error: z.string() }),
+          },
+        },
+      },
+    },
+  }),
+  async (c) => {
+    const auth = getAuth(c);
+    const db = c.get("db");
+    if (!auth?.userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+
+    const { teamId, id } = c.req.valid("param");
+
+    // チームメンバー確認
+    const member = await checkTeamMember(db, teamId, auth.userId);
+    if (!member) {
+      return c.json({ error: "Not a team member" }, 403);
+    }
+
+    // タスクの存在確認
+    const task = await db
+      .select()
+      .from(teamTasks)
+      .where(and(eq(teamTasks.id, id), eq(teamTasks.teamId, teamId)))
+      .get();
+
+    if (!task) {
+      return c.json({ error: "Task not found" }, 404);
+    }
+
+    // 履歴を取得（変更者名付き、新しい順）
+    const history = await db
+      .select({
+        id: teamTaskStatusHistory.id,
+        fromStatus: teamTaskStatusHistory.fromStatus,
+        toStatus: teamTaskStatusHistory.toStatus,
+        changedAt: teamTaskStatusHistory.changedAt,
+        userName: teamMembers.displayName,
+      })
+      .from(teamTaskStatusHistory)
+      .leftJoin(
+        teamMembers,
+        and(
+          eq(teamTaskStatusHistory.userId, teamMembers.userId),
+          eq(teamTaskStatusHistory.teamId, teamMembers.teamId),
+        ),
+      )
+      .where(
+        and(
+          eq(teamTaskStatusHistory.taskId, id),
+          eq(teamTaskStatusHistory.teamId, teamId),
+        ),
+      )
+      .orderBy(desc(teamTaskStatusHistory.changedAt));
+
+    return c.json({ history }, 200);
   },
 );
 

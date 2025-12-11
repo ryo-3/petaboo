@@ -59,3 +59,12 @@ export interface UpdateTaskData {
 }
 
 export type { TaskStatus } from "@/src/config/taskTabConfig";
+
+// ステータス変更履歴
+export interface TaskStatusHistoryItem {
+  id: number;
+  fromStatus: TaskStatus | null;
+  toStatus: TaskStatus;
+  changedAt: number; // Unix timestamp
+  userName?: string | null; // チームのみ（変更者名）
+}

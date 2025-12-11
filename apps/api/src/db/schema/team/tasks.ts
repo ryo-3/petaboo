@@ -18,3 +18,14 @@ export const teamTasks = sqliteTable("team_tasks", {
   updatedAt: integer("updated_at"),
   deletedAt: integer("deleted_at"), // 論理削除用
 });
+
+// チームタスクステータス変更履歴テーブル
+export const teamTaskStatusHistory = sqliteTable("team_task_status_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  taskId: integer("task_id").notNull(),
+  teamId: integer("team_id").notNull(),
+  userId: text("user_id").notNull(), // 変更したユーザー
+  fromStatus: text("from_status"), // 変更前（作成時はNULL）
+  toStatus: text("to_status").notNull(), // 変更後
+  changedAt: integer("changed_at").notNull(), // Unix timestamp
+});

@@ -581,6 +581,35 @@ export const tasksApi = {
     }
     return response;
   },
+
+  // GET /tasks/:id/status-history (ステータス変更履歴取得)
+  getTaskStatusHistory: async (id: number, token?: string) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${id}/status-history`, {
+      headers: createHeaders(token),
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
+
+  // GET /teams/:teamId/tasks/:id/status-history (チームタスクステータス変更履歴取得)
+  getTeamTaskStatusHistory: async (
+    teamId: number,
+    id: number,
+    token?: string,
+  ) => {
+    const response = await fetch(
+      `${API_BASE_URL}/teams/${teamId}/tasks/${id}/status-history`,
+      {
+        headers: createHeaders(token),
+      },
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  },
 };
 
 export const tagsApi = {

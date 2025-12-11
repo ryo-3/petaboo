@@ -1155,7 +1155,9 @@ function MemoScreen({
 
   // 中央パネルのコンテンツ（エディター部分）
   const centerPanelContent = (
-    <div className={shouldShowPanelControls && !showListPanel ? "pl-2" : ""}>
+    <div
+      className={`h-full ${shouldShowPanelControls && !showListPanel ? "pl-2" : ""}`}
+    >
       {/* 左パネル非表示時は中央にヘッダーを表示 */}
       {shouldShowPanelControls && !showListPanel && (
         <DesktopUpper {...desktopUpperCommonProps} hideTabs={true} />

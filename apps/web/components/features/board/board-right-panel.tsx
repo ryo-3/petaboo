@@ -377,7 +377,7 @@ function BoardRightPanel({
     <RightPanel isOpen={isOpen} onClose={onClose} disableAnimation={teamMode}>
       {selectedMemo && !selectedTask && rightPanelMode === null && (
         <div className="flex flex-col h-full overflow-hidden">
-          <div className="flex-shrink-0">
+          <div className="flex-1 min-h-0 overflow-auto">
             {activeMemoTab === "deleted" ? (
               <MemoEditor
                 key={`memo-${selectedMemo.id}`}
@@ -483,7 +483,7 @@ function BoardRightPanel({
 
       {selectedTask && !selectedMemo && rightPanelMode === null && (
         <div className="flex flex-col h-full overflow-hidden">
-          <div className="flex-shrink-0">
+          <div className="flex-1 min-h-0 overflow-auto">
             {isDeletedTask(selectedTask) ? (
               <TaskEditor
                 task={selectedTask}

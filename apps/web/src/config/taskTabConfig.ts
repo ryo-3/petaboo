@@ -84,6 +84,22 @@ export const getTaskTabEmptyMessage = (id: string): string =>
 export const getTaskStatusColor = (status: string): string =>
   getTaskTab(status)?.color ?? "bg-zinc-200";
 
+// ステータスの丸（ドット）の色を取得
+export const getTaskStatusDotColor = (status: string): string => {
+  switch (status) {
+    case "todo":
+      return "bg-zinc-400";
+    case "in_progress":
+      return "bg-blue-500";
+    case "checking":
+      return "bg-orange-500";
+    case "completed":
+      return "bg-Green";
+    default:
+      return "bg-zinc-400";
+  }
+};
+
 export const getStatusTabs = (): TaskTabConfig[] =>
   TASK_TABS.filter((tab) => tab.category === "status");
 

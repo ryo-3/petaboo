@@ -1,5 +1,7 @@
 /**
  * UnixタイムスタンプをJST形式の文字列に変換
+ * 今年のデータ: MM/DD HH:mm
+ * 去年以前: YY/MM/DD HH:mm
  */
 export function formatDate(timestamp: number): string {
   if (!timestamp || typeof timestamp !== "number") {
@@ -12,7 +14,21 @@ export function formatDate(timestamp: number): string {
     return "不正な日付";
   }
 
-  const formatted = date
+  const now = new Date();
+  const isSameYear = date.getFullYear() === now.getFullYear();
+
+  if (isSameYear) {
+    return date
+      .toLocaleString("ja-JP", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+      .replace(/\//g, "/");
+  }
+
+  return date
     .toLocaleString("ja-JP", {
       year: "2-digit",
       month: "2-digit",
@@ -21,8 +37,6 @@ export function formatDate(timestamp: number): string {
       minute: "2-digit",
     })
     .replace(/\//g, "/");
-
-  return formatted;
 }
 
 /**

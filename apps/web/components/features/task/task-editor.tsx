@@ -1405,16 +1405,21 @@ function TaskEditor({
                 )}
                 {/* ヘッダー右側にアバター・日付表示（showDateAtBottom=falseの場合） */}
                 {!showDateAtBottom && task && task.id !== 0 && (
-                  <>
-                    <CreatorAvatar
-                      createdBy={createdBy || task?.createdBy}
-                      avatarColor={createdByAvatarColor || task?.avatarColor}
-                      teamMode={teamMode}
-                      size="lg"
-                      className="mr-2"
-                    />
-                    <DateInfo item={task} isEditing={!isDeleted} />
-                  </>
+                  <DateInfo
+                    item={task}
+                    isEditing={!isDeleted}
+                    showStatus={true}
+                    teamMode={teamMode}
+                    teamId={teamId}
+                    avatar={
+                      <CreatorAvatar
+                        createdBy={createdBy || task?.createdBy}
+                        avatarColor={createdByAvatarColor || task?.avatarColor}
+                        teamMode={teamMode}
+                        size="lg"
+                      />
+                    }
+                  />
                 )}
                 {isDeleted && (
                   <div className="flex gap-2 mr-2">
@@ -1626,32 +1631,36 @@ function TaskEditor({
             {/* 作成者・日付・ID表示（showDateAtBottom=trueかつツールバー非表示時のみ） */}
             {/* 新規作成時でもMemoEditorと同様の余白を確保 */}
             {!toolbarVisible && showDateAtBottom && (
-              <div className="flex justify-between items-center mx-2 mt-1 mb-1 h-[20px]">
-                {/* 左側：ボードインデックス（boardIndexがある場合のみ表示） */}
-                {task && task.id !== 0 && task.boardIndex ? (
-                  <span className="text-xs text-muted-foreground select-all">
-                    #{task.boardIndex}
-                  </span>
-                ) : (
-                  <span />
-                )}
-                {/* 右側：作成者・日付 */}
-                {task && task.id !== 0 && (
-                  <div className="flex items-center gap-2">
-                    <CreatorAvatar
-                      createdBy={createdBy}
-                      avatarColor={createdByAvatarColor}
-                      teamMode={teamMode}
-                      size="md"
-                      className=""
-                    />
+              <div className="mx-2 mt-1 mb-1">
+                <div className="flex justify-between items-center h-[20px]">
+                  {/* 左側：ボードインデックス */}
+                  {task && task.id !== 0 && task.boardIndex ? (
+                    <span className="text-xs text-muted-foreground select-all">
+                      #{task.boardIndex}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  {/* 右側：作成者・日付 */}
+                  {task && task.id !== 0 && (
                     <DateInfo
                       item={task as Task}
                       isEditing={!isDeleted}
                       size="sm"
+                      showStatus={true}
+                      teamMode={teamMode}
+                      teamId={teamId}
+                      avatar={
+                        <CreatorAvatar
+                          createdBy={createdBy}
+                          avatarColor={createdByAvatarColor}
+                          teamMode={teamMode}
+                          size="md"
+                        />
+                      }
                     />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
 

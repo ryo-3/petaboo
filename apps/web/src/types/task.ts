@@ -14,6 +14,9 @@ export interface Task extends BaseItemFields, TeamCreatorFields {
   assigneeAvatarColor?: string | null; // 担当者のアバター色
   commentCount?: number;
   completedAt?: number | null; // 完了日時（ステータス履歴から取得）
+  completedBy?: string | null; // 完了させたユーザーID
+  completedByName?: string | null; // 完了させたユーザー名
+  completedByAvatarColor?: string | null; // 完了させたユーザーのアバター色
 }
 
 export interface DeletedTask

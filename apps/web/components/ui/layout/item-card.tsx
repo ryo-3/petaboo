@@ -355,6 +355,14 @@ function ItemCard({
                 <div className="flex gap-2 justify-end items-center">
                   <div className="flex gap-1 items-center">
                     <span>完了</span>
+                    {teamMode && (task as Task).completedByName && (
+                      <CreatorAvatar
+                        createdBy={(task as Task).completedByName}
+                        avatarColor={(task as Task).completedByAvatarColor}
+                        teamMode={teamMode}
+                        size="sm"
+                      />
+                    )}
                     <span>
                       {formatDate(
                         (task as Task).completedAt ||

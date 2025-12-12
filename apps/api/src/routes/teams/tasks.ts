@@ -52,6 +52,9 @@ const TeamTaskSchema = z.object({
   updatedByAvatarColor: z.string().nullable(), // 最終編集者のアバター色
   commentCount: z.number().optional(), // コメント数
   completedAt: z.number().nullable().optional(), // 完了日時（ステータス履歴から取得）
+  completedBy: z.string().nullable().optional(), // 完了させたユーザーID
+  completedByName: z.string().nullable().optional(), // 完了させたユーザー名
+  completedByAvatarColor: z.string().nullable().optional(), // 完了させたユーザーのアバター色
 });
 
 const TeamTaskInputSchema = z.object({
@@ -182,6 +185,38 @@ app.openapi(
           ORDER BY ${teamTaskStatusHistory.changedAt} DESC
           LIMIT 1
         )`.as("completedAt"),
+          // 完了させたユーザーID（status_historyから取得）
+          completedBy: sql<string | null>`(
+          SELECT ${teamTaskStatusHistory.userId}
+          FROM ${teamTaskStatusHistory}
+          WHERE ${teamTaskStatusHistory.taskId} = ${teamTasks.id}
+            AND ${teamTaskStatusHistory.teamId} = ${teamTasks.teamId}
+            AND ${teamTaskStatusHistory.toStatus} = 'completed'
+          ORDER BY ${teamTaskStatusHistory.changedAt} DESC
+          LIMIT 1
+        )`.as("completedBy"),
+          // 完了させたユーザー名（status_history + team_members から取得）
+          completedByName: sql<string | null>`(
+          SELECT tm.display_name
+          FROM ${teamTaskStatusHistory} tsh
+          LEFT JOIN ${teamMembers} tm ON tsh.user_id = tm.user_id AND tsh.team_id = tm.team_id
+          WHERE tsh.task_id = ${teamTasks.id}
+            AND tsh.team_id = ${teamTasks.teamId}
+            AND tsh.to_status = 'completed'
+          ORDER BY tsh.changed_at DESC
+          LIMIT 1
+        )`.as("completedByName"),
+          // 完了させたユーザーのアバター色
+          completedByAvatarColor: sql<string | null>`(
+          SELECT tm.avatar_color
+          FROM ${teamTaskStatusHistory} tsh
+          LEFT JOIN ${teamMembers} tm ON tsh.user_id = tm.user_id AND tsh.team_id = tm.team_id
+          WHERE tsh.task_id = ${teamTasks.id}
+            AND tsh.team_id = ${teamTasks.teamId}
+            AND tsh.to_status = 'completed'
+          ORDER BY tsh.changed_at DESC
+          LIMIT 1
+        )`.as("completedByAvatarColor"),
         })
         .from(teamTasks)
         .leftJoin(teamMembers, getTeamTaskMemberJoin())

@@ -1416,7 +1416,7 @@ function TaskEditor({
                         createdBy={createdBy || task?.createdBy}
                         avatarColor={createdByAvatarColor || task?.avatarColor}
                         teamMode={teamMode}
-                        size="lg"
+                        size="sm"
                       />
                     }
                   />
@@ -1655,7 +1655,7 @@ function TaskEditor({
                           createdBy={createdBy}
                           avatarColor={createdByAvatarColor}
                           teamMode={teamMode}
-                          size="md"
+                          size="sm"
                         />
                       }
                     />

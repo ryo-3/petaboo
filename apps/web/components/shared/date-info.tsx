@@ -181,13 +181,11 @@ function StatusDisplay({
                     <span className="text-gray-600 whitespace-nowrap">
                       {formatHistoryDateTime(item.changedAt)}
                     </span>
-                    {teamMode &&
-                      item.userName &&
-                      item.userId !== taskCreatorId && (
-                        <span className="text-gray-400 truncate">
-                          {item.userName}
-                        </span>
-                      )}
+                    {teamMode && item.userName && (
+                      <span className="text-gray-400 truncate">
+                        {item.userName}
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

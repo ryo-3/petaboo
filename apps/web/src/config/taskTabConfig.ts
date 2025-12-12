@@ -50,8 +50,8 @@ export const TASK_TABS: TaskTabConfig[] = [
     id: "checking",
     label: "確認中",
     emptyMessage: "確認中のタスクがありません",
-    color: "bg-orange-200",
-    textColor: "text-orange-800",
+    color: "bg-orange-500",
+    textColor: "text-gray-100",
     category: "status",
   },
   {

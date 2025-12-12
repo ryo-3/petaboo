@@ -5,11 +5,8 @@ import type { Memo, DeletedMemo } from "@/src/types/memo";
 import type { Task, DeletedTask, TaskStatus } from "@/src/types/task";
 import { formatDate } from "@/src/utils/formatDate";
 import { useTaskStatusHistory } from "@/src/hooks/use-task-status-history";
-import {
-  getTaskTabLabel,
-  getTaskStatusDotColor,
-  getTaskStatusColor,
-} from "@/src/config/taskTabConfig";
+import { getTaskTabLabel } from "@/src/config/taskTabConfig";
+import { getStatusColor } from "@/src/utils/taskUtils";
 import Tooltip from "@/components/ui/base/tooltip";
 
 interface DateInfoProps {
@@ -62,13 +59,13 @@ function StatusDisplay({
   currentStatus,
   teamMode,
   teamId,
-  taskCreatorId,
+  completedAt,
 }: {
   taskId: number | null;
   currentStatus: string;
   teamMode: boolean;
   teamId?: number;
-  taskCreatorId?: string;
+  completedAt?: number | null;
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -112,6 +109,12 @@ function StatusDisplay({
     ? latestStatusChange.toStatus
     : currentStatus;
 
+  // 完了タスクの場合は完了日時を表示（completedAtを優先）
+  const isCompleted = currentStatus === "completed";
+  const completedDateTime = isCompleted
+    ? completedAt || latestStatusChange?.changedAt
+    : null;
+
   return (
     <span className="relative flex items-center gap-1.5">
       <button
@@ -120,16 +123,14 @@ function StatusDisplay({
         className="flex items-center gap-1.5 hover:opacity-70 transition-opacity cursor-pointer"
       >
         <span
-          className={`size-2.5 rounded-full ${getTaskStatusDotColor(displayStatus as TaskStatus)}`}
-        />
-        <span className="text-gray-600">
+          className={`px-1.5 py-0.5 rounded text-[10px] ${getStatusColor(displayStatus)}`}
+        >
           {getTaskTabLabel(displayStatus as TaskStatus)}
         </span>
         {isMounted &&
           latestStatusChange &&
           teamMode &&
-          latestStatusChange.userName &&
-          latestStatusChange.userId !== taskCreatorId && (
+          latestStatusChange.userName && (
             <Tooltip text={latestStatusChange.userName} position="top">
               <div
                 className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-medium text-xs ${
@@ -140,11 +141,16 @@ function StatusDisplay({
               </div>
             </Tooltip>
           )}
-        {isMounted && latestStatusChange && (
-          <span className="text-gray-400">
-            {formatStatusDateTime(latestStatusChange.changedAt)}
-          </span>
-        )}
+        {isMounted &&
+          (isCompleted ? completedDateTime : latestStatusChange) && (
+            <span className="text-gray-400">
+              {formatStatusDateTime(
+                isCompleted && completedDateTime
+                  ? completedDateTime
+                  : latestStatusChange!.changedAt,
+              )}
+            </span>
+          )}
       </button>
 
       {isOpen && (
@@ -170,11 +176,7 @@ function StatusDisplay({
                     className="flex items-center gap-2 text-xs"
                   >
                     <span
-                      className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${getTaskStatusColor(item.toStatus)} ${
-                        item.toStatus === "completed"
-                          ? "text-white"
-                          : "text-gray-700"
-                      }`}
+                      className={`px-1.5 py-0.5 rounded text-[10px] ${getStatusColor(item.toStatus)}`}
                     >
                       {getTaskTabLabel(item.toStatus)}
                     </span>
@@ -246,25 +248,20 @@ function DateInfo({
         {showEditTime && (
           <span className="flex items-center gap-1">
             <span>編集</span>
-            {/* 編集者が作成者と異なる場合のみアバター表示 */}
-            {teamMode &&
-              "updatedByName" in item &&
-              item.updatedByName &&
-              "updatedBy" in item &&
-              "userId" in item &&
-              item.updatedBy !== item.userId && (
-                <Tooltip text={item.updatedByName} position="top">
-                  <div
-                    className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-medium text-xs ${
-                      ("updatedByAvatarColor" in item &&
-                        item.updatedByAvatarColor) ||
-                      "bg-blue-500"
-                    }`}
-                  >
-                    {item.updatedByName.charAt(0).toUpperCase()}
-                  </div>
-                </Tooltip>
-              )}
+            {/* 編集者のアバター表示 */}
+            {teamMode && "updatedByName" in item && item.updatedByName && (
+              <Tooltip text={item.updatedByName} position="top">
+                <div
+                  className={`w-4 h-4 rounded-full flex items-center justify-center text-white font-medium text-xs ${
+                    ("updatedByAvatarColor" in item &&
+                      item.updatedByAvatarColor) ||
+                    "bg-blue-500"
+                  }`}
+                >
+                  {item.updatedByName.charAt(0).toUpperCase()}
+                </div>
+              </Tooltip>
+            )}
             <span>{formatDate(latestEditTime)}</span>
           </span>
         )}
@@ -274,7 +271,7 @@ function DateInfo({
             currentStatus={currentStatus}
             teamMode={teamMode}
             teamId={teamId}
-            taskCreatorId={"userId" in item ? item.userId : undefined}
+            completedAt={"completedAt" in item ? item.completedAt : undefined}
           />
         )}
       </div>

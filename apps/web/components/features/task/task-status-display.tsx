@@ -273,7 +273,12 @@ function TaskStatusDisplay({
   };
 
   const getDefaultSortValue = (task: Task): number => {
-    // デフォルトは優先度 > 更新日 > 作成日順
+    // 完了タブは完了日時順（新しい順）
+    if (activeTab === "completed") {
+      // completedAtがある場合はそれを使用、なければupdatedAtで代替
+      return task.completedAt || task.updatedAt || task.createdAt;
+    }
+    // それ以外は優先度 > 更新日 > 作成日順
     if (!task) return 0;
     const priorityOrder = { high: 3, medium: 2, low: 1 };
     const priorityValue = priorityOrder[task.priority] * 1000000000; // 優先度を大きな重みで乗算

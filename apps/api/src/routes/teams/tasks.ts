@@ -51,6 +51,7 @@ const TeamTaskSchema = z.object({
   updatedByName: z.string().nullable(), // 最終編集者の表示名
   updatedByAvatarColor: z.string().nullable(), // 最終編集者のアバター色
   commentCount: z.number().optional(), // コメント数
+  completedAt: z.number().nullable().optional(), // 完了日時（ステータス履歴から取得）
 });
 
 const TeamTaskInputSchema = z.object({
@@ -171,6 +172,16 @@ app.openapi(
             AND ${teamComments.targetDisplayId} = ${teamTasks.displayId}
             AND ${teamComments.teamId} = ${teamTasks.teamId}
         )`.as("commentCount"),
+          // 最新の完了日時（status_historyから取得）
+          completedAt: sql<number | null>`(
+          SELECT ${teamTaskStatusHistory.changedAt}
+          FROM ${teamTaskStatusHistory}
+          WHERE ${teamTaskStatusHistory.taskId} = ${teamTasks.id}
+            AND ${teamTaskStatusHistory.teamId} = ${teamTasks.teamId}
+            AND ${teamTaskStatusHistory.toStatus} = 'completed'
+          ORDER BY ${teamTaskStatusHistory.changedAt} DESC
+          LIMIT 1
+        )`.as("completedAt"),
         })
         .from(teamTasks)
         .leftJoin(teamMembers, getTeamTaskMemberJoin())

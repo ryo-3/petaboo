@@ -3,7 +3,7 @@ import type { Task, DeletedTask } from "@/src/types/task";
 import type { Tag } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import type { Attachment } from "@/src/hooks/use-attachments";
-import { formatDateOnly } from "@/src/utils/formatDate";
+import { formatDate, formatDateOnly } from "@/src/utils/formatDate";
 import {
   getPriorityColor,
   getPriorityText,
@@ -337,7 +337,7 @@ function ItemCard({
                 // 削除済み：作成日 + 削除日
                 <div className="flex gap-2 justify-end items-center">
                   <div className="flex gap-1 items-center">
-                    <span>作成:</span>
+                    <span>作成</span>
                     {teamMode && (
                       <CreatorAvatar
                         createdBy={item.createdBy}
@@ -348,13 +348,27 @@ function ItemCard({
                     )}
                     <span>{formatDateOnly(item.createdAt)}</span>
                   </div>
-                  <div>削除: {formatDateOnly(deletedItem.deletedAt)}</div>
+                  <div>削除 {formatDateOnly(deletedItem.deletedAt)}</div>
+                </div>
+              ) : isTask && task?.status === "completed" ? (
+                // 完了タスク：完了日時のみ表示（時刻付き）
+                <div className="flex gap-2 justify-end items-center">
+                  <div className="flex gap-1 items-center">
+                    <span>完了</span>
+                    <span>
+                      {formatDate(
+                        (task as Task).completedAt ||
+                          task.updatedAt ||
+                          task.createdAt,
+                      )}
+                    </span>
+                  </div>
                 </div>
               ) : (
                 // 通常：作成日 + 編集日（両方表示）
                 <div className="flex gap-2 justify-end items-center">
                   <div className="flex gap-1 items-center">
-                    <span>作成:</span>
+                    <span>作成</span>
                     {teamMode && (
                       <CreatorAvatar
                         createdBy={item.createdBy}
@@ -370,7 +384,7 @@ function ItemCard({
                     if (item.id < 0) {
                       const updateTime = item.updatedAt || item.createdAt;
                       if (updateTime !== item.createdAt) {
-                        return <div>編集: {formatDateOnly(updateTime)}</div>;
+                        return <div>編集 {formatDateOnly(updateTime)}</div>;
                       }
                       return null;
                     }
@@ -382,9 +396,9 @@ function ItemCard({
                       item.updatedAt && item.updatedAt !== item.createdAt;
 
                     if (hasLocalEdit) {
-                      return <div>編集: {formatDateOnly(lastEditTime)}</div>;
+                      return <div>編集 {formatDateOnly(lastEditTime)}</div>;
                     } else if (hasApiUpdate) {
-                      return <div>編集: {formatDateOnly(item.updatedAt!)}</div>;
+                      return <div>編集 {formatDateOnly(item.updatedAt!)}</div>;
                     }
                     return null;
                   })()}

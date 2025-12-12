@@ -11,6 +11,7 @@ import {
   teamBoardItems,
   teamMemos,
   teamTasks,
+  taskStatusHistory,
 } from "../../db";
 import type {
   NewBoard,
@@ -980,6 +981,15 @@ export function createAPI(app: AppType) {
               boardCategoryId: tasks.boardCategoryId,
               createdAt: tasks.createdAt,
               updatedAt: tasks.updatedAt,
+              // 完了日時（status_historyから取得）
+              completedAt: sql<number | null>`(
+                SELECT ${taskStatusHistory.changedAt}
+                FROM ${taskStatusHistory}
+                WHERE ${taskStatusHistory.taskId} = ${tasks.id}
+                  AND ${taskStatusHistory.toStatus} = 'completed'
+                ORDER BY ${taskStatusHistory.changedAt} DESC
+                LIMIT 1
+              )`.as("completedAt"),
             })
             .from(tasks)
             .where(

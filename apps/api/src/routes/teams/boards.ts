@@ -19,6 +19,7 @@ import {
   teamMemos,
   teamTasks,
   teamComments,
+  teamTaskStatusHistory,
 } from "../../db";
 import type {
   NewTeamBoard,
@@ -834,6 +835,74 @@ export function createTeamBoardsAPI(app: AppType) {
           item.content.boardIndex = item.boardIndex;
         }
       });
+
+      // 完了タスクのcompletedBy情報を取得
+      const completedTaskIds = taskItems
+        .filter((item) => item.content?.status === "completed")
+        .map((item) => item.content?.id)
+        .filter((id): id is number => id !== undefined);
+
+      if (completedTaskIds.length > 0) {
+        // status_historyから完了情報を取得
+        const completedByInfo = await db
+          .select({
+            taskId: teamTaskStatusHistory.taskId,
+            completedAt: teamTaskStatusHistory.changedAt,
+            completedBy: teamTaskStatusHistory.userId,
+            completedByName: teamMembers.displayName,
+            completedByAvatarColor: teamMembers.avatarColor,
+          })
+          .from(teamTaskStatusHistory)
+          .leftJoin(
+            teamMembers,
+            and(
+              eq(teamTaskStatusHistory.userId, teamMembers.userId),
+              eq(teamTaskStatusHistory.teamId, teamMembers.teamId),
+            ),
+          )
+          .where(
+            and(
+              eq(teamTaskStatusHistory.teamId, parseInt(teamId)),
+              eq(teamTaskStatusHistory.toStatus, "completed"),
+            ),
+          )
+          .orderBy(desc(teamTaskStatusHistory.changedAt));
+
+        // taskIdごとに最新の完了情報をマップ化
+        const completedByMap = new Map<
+          number,
+          {
+            completedAt: number;
+            completedBy: string | null;
+            completedByName: string | null;
+            completedByAvatarColor: string | null;
+          }
+        >();
+        completedByInfo.forEach((info) => {
+          if (!completedByMap.has(info.taskId)) {
+            completedByMap.set(info.taskId, {
+              completedAt: info.completedAt,
+              completedBy: info.completedBy,
+              completedByName: info.completedByName,
+              completedByAvatarColor: info.completedByAvatarColor,
+            });
+          }
+        });
+
+        // タスクアイテムにcompletedBy情報をマージ
+        taskItems.forEach((item) => {
+          if (item.content && item.content.status === "completed") {
+            const info = completedByMap.get(item.content.id);
+            if (info) {
+              (item.content as any).completedAt = info.completedAt;
+              (item.content as any).completedBy = info.completedBy;
+              (item.content as any).completedByName = info.completedByName;
+              (item.content as any).completedByAvatarColor =
+                info.completedByAvatarColor;
+            }
+          }
+        });
+      }
 
       // メモ数・タスク数・コメント数を計算
       const memoCount = formattedItems.filter(

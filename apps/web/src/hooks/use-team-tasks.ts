@@ -13,7 +13,7 @@ export interface TeamTask {
   uuid: string | null;
   title: string;
   description: string | null;
-  status: "todo" | "in_progress" | "completed";
+  status: "todo" | "in_progress" | "completed" | "checking";
   priority: "low" | "medium" | "high";
   dueDate: number | null;
   categoryId: number | null;
@@ -24,6 +24,11 @@ export interface TeamTask {
   userId?: string;
   createdBy?: string | null;
   avatarColor?: string | null;
+  // 完了情報
+  completedAt?: number | null;
+  completedBy?: string | null;
+  completedByName?: string | null;
+  completedByAvatarColor?: string | null;
 }
 
 export interface TeamDeletedTask extends TeamTask {

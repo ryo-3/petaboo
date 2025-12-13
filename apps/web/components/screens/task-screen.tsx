@@ -381,16 +381,6 @@ function TaskScreen({
   const { taskListTab: activeTab, setTaskListTab: setActiveTab } =
     useTabState();
 
-  // デバッグログ
-  console.log(
-    "[TaskScreen] activeTab:",
-    activeTab,
-    "selectedTask:",
-    selectedTask?.id,
-    "selectedTask.status:",
-    selectedTask?.status,
-  );
-
   // URL からの初期タスク選択（useTabStateの後に配置）
   useEffect(() => {
     // ボード詳細から呼び出された場合はURL復元をスキップ（ボード内の選択は別処理）

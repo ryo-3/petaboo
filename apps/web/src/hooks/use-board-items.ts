@@ -110,22 +110,6 @@ export function useBoardItems({
       return task?.status === activeTaskTab;
     });
 
-    // PETABOO-55 デバッグ: タスク一覧が空の場合にログ出力
-    if (filtered.length === 0 && allTaskItems.length > 0) {
-      console.warn("🔴 PETABOO-55: タスク一覧が空になっています", {
-        boardId,
-        activeTaskTab,
-        allTaskItemsCount: allTaskItems.length,
-        allTaskStatuses: allTaskItems.map((item) => ({
-          id: item.content?.id,
-          status: (item.content as Task)?.status,
-          hasContent: !!item.content,
-          contentKeys: item.content ? Object.keys(item.content) : [],
-        })),
-        timestamp: new Date().toISOString(),
-      });
-    }
-
     return filtered;
   }, [activeTaskTab, boardDeletedItems?.tasks, boardId, allTaskItems]);
 

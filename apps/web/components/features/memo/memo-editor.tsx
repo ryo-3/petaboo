@@ -1449,7 +1449,7 @@ function MemoEditor({
                 ここにドロップして画像を追加
               </div>
             )}
-            <div className="relative z-20">
+            <div className="relative z-20 h-full flex flex-col">
               <BaseViewer
                 item={
                   memo || {
@@ -1470,7 +1470,7 @@ function MemoEditor({
                 compactPadding={true}
                 headerActions={null}
               >
-                <div className="w-full pr-1">
+                <div className="w-full pr-1 flex-1">
                   <TiptapEditor
                     content={content}
                     onChange={(newContent) => {

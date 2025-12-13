@@ -269,9 +269,18 @@ export function TiptapEditor({
 
   return (
     <div
-      className={`flex flex-col ${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500"}`}
+      className={`flex flex-col h-full min-h-[200px] ${readOnly ? "text-red-500 bg-red-50 cursor-not-allowed" : "text-gray-500 cursor-text"}`}
+      onClick={(e) => {
+        // readOnlyでない場合、コンテナクリックでエディターにフォーカス
+        if (!readOnly && editor && !editor.isFocused) {
+          const target = e.target as HTMLElement;
+          if (!target.closest(".ProseMirror")) {
+            editor.commands.focus("end");
+          }
+        }
+      }}
     >
-      <EditorContent editor={editor} />
+      <EditorContent editor={editor} className="flex-1" />
     </div>
   );
 }

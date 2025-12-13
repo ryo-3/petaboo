@@ -830,14 +830,14 @@ app.openapi(
         createdAt: Date.now(),
       });
 
-      // Slack通知を送信
+      // Slack通知を送信（タイトルが同時変更されている場合は新しいタイトルを使用）
       await sendAssigneeSlackNotification(
         db,
         c.env,
         teamId,
         newAssigneeId as string,
         member.displayName || "誰か",
-        existingTask.title,
+        rest.title || existingTask.title,
         existingTask.displayId,
         notificationUrl,
       );

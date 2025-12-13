@@ -1312,6 +1312,16 @@ export async function getInviteUrl(c: any) {
       return c.json(null);
     }
 
+    // 有効期限チェック（秒単位で比較）
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (invitation.expiresAt < currentTime) {
+      // 期限切れの場合は削除してnullを返す
+      await db
+        .delete(teamInvitations)
+        .where(eq(teamInvitations.id, invitation.id));
+      return c.json(null);
+    }
+
     return c.json({
       token: invitation.token,
       expiresAt: new Date(invitation.expiresAt * 1000).toISOString(),

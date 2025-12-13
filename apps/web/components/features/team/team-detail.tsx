@@ -122,7 +122,15 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   const { mutate: updateDisplayName } = useUpdateMemberDisplayName();
 
-  const [showInvitePanel, setShowInvitePanel] = useState(false);
+  // URLのinviteパラメータで招待パネル表示を初期化
+  // ※Next.jsのルーターが大文字に変換する場合があるため両方チェック
+  const [showInvitePanel, setShowInvitePanel] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.has("invite") || params.has("INVITE");
+    }
+    return false;
+  });
   const [previousTab, setPreviousTab] = useState<string | null>(null);
   const [inviteMessage, setInviteMessage] = useState<{
     type: "success" | "error";
@@ -1045,6 +1053,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   <BackButton
                     onClick={() => {
                       setShowInvitePanel(false);
+                      // URLからinviteパラメータを削除
+                      const params = new URLSearchParams(
+                        window.location.search,
+                      );
+                      params.delete("invite");
                       if (previousTab) {
                         handleTabChange(
                           previousTab as
@@ -1683,7 +1696,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                           onClick={() => {
                             setPreviousTab(activeTab);
                             setShowInvitePanel(true);
-                            handleTabChange("overview");
+                            // URLにinviteパラメータを追加（サイドバーのチームアイコン選択状態を維持するため）
+                            router.replace(`/team/${customUrl}?invite`, {
+                              scroll: false,
+                            });
                           }}
                         >
                           招待

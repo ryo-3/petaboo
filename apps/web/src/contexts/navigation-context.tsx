@@ -188,8 +188,13 @@ export function NavigationProvider({
             : "boards"
         : activeTab;
 
+      // 招待パネル表示中かどうか（URLにinviteパラメータがあるか）
+      // ※Next.jsのルーターが大文字に変換する場合があるため両方チェック
+      const isInvitePanel =
+        searchParams.has("invite") || searchParams.has("INVITE");
+
       const result = {
-        home: !effectiveTab || effectiveTab === "overview",
+        home: !isInvitePanel && (!effectiveTab || effectiveTab === "overview"),
         memo: effectiveTab === "memos" || optimisticMode === "memo",
         task: effectiveTab === "tasks" || optimisticMode === "task",
         board:
@@ -203,6 +208,7 @@ export function NavigationProvider({
         search: activeTab === "search",
         settings: isTeamSettingsTab,
         team:
+          isInvitePanel ||
           effectiveTab === "team-list" ||
           (!effectiveTab && screenMode === "team"),
       };

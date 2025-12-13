@@ -680,7 +680,7 @@ export default function CommentSection({
     <div className="flex flex-col h-full">
       {/* ヘッダー */}
       <div className="p-4 flex-shrink-0 hidden md:flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 min-w-0 flex-1">
           {targetType === "memo" && (
             <FileText className="size-4 text-gray-500 flex-shrink-0" />
           )}
@@ -690,7 +690,7 @@ export default function CommentSection({
           {targetType === "board" && (
             <DashboardIcon className="size-4 text-gray-500 flex-shrink-0" />
           )}
-          <span className="truncate">{displayTitle}</span>
+          <span className="truncate min-w-0">{displayTitle}</span>
           {comments.length > 0 && (
             <span className="text-xs text-gray-500 flex-shrink-0">
               ({comments.length})

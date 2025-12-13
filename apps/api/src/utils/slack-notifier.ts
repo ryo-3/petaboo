@@ -272,3 +272,20 @@ export function formatTestNotification(teamName: string): string {
 
 ぺたぼーからの通知がこのチャンネルに届きます。`;
 }
+
+/**
+ * 担当者設定通知メッセージをフォーマット
+ */
+export function formatAssigneeNotification(
+  assigneeName: string,
+  assignerName: string,
+  taskTitle: string,
+  linkUrl: string,
+): string {
+  return `👤 @${assigneeName} さんが担当者に設定されました
+
+📝 タスク: ${taskTitle}
+👤 設定者: ${assignerName}
+
+🔗 ${linkUrl}`;
+}

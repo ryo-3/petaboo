@@ -5,10 +5,14 @@ import { aliasedTable } from "drizzle-orm/alias";
 import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
 import { databaseMiddleware } from "../../middleware/database";
 import { teamTasks, teamTaskStatusHistory } from "../../db/schema/team/tasks";
-import { teamMembers } from "../../db/schema/team/teams";
+import { teamMembers, teams } from "../../db/schema/team/teams";
+import { teamNotifications } from "../../db/schema/team/notifications";
 import { teamComments } from "../../db/schema/team/comments";
 import { teamAttachments } from "../../db/schema/team/attachments";
 import { teamTaggings } from "../../db/schema/team/tags";
+import { teamSlackConfigs } from "../../db/schema/team/slack-configs";
+import { boardSlackConfigs } from "../../db/schema/team/board-slack-configs";
+import { teamBoardItems, teamBoards } from "../../db/schema/team/boards";
 import { users } from "../../db/schema/users";
 import { generateTaskDisplayId } from "../../utils/displayId";
 import { generateUuid } from "../../utils/originalId";
@@ -17,6 +21,11 @@ import {
   getTeamTaskSelectFields,
 } from "../../utils/teamJoinUtils";
 import { logActivity } from "../../utils/activity-logger";
+import { decryptWebhookUrl, hasEncryptionKey } from "../../utils/encryption";
+import {
+  sendSlackNotification,
+  formatAssigneeNotification,
+} from "../../utils/slack-notifier";
 
 const app = new OpenAPIHono();
 
@@ -101,6 +110,139 @@ async function checkTeamMember(db: any, teamId: number, userId: string) {
     .limit(1);
 
   return member.length > 0 ? member[0] : null;
+}
+
+// 担当者設定時のSlack通知送信
+async function sendAssigneeSlackNotification(
+  db: any,
+  env: any,
+  teamId: number,
+  assigneeId: string,
+  assignerName: string,
+  taskTitle: string,
+  taskDisplayId: string,
+) {
+  try {
+    // タスクがボードに所属しているか確認
+    const boardItems = await db
+      .select({ boardId: teamBoardItems.boardId })
+      .from(teamBoardItems)
+      .where(
+        and(
+          eq(teamBoardItems.itemType, "task"),
+          eq(teamBoardItems.displayId, taskDisplayId),
+        ),
+      )
+      .limit(1);
+
+    const boardId = boardItems.length > 0 ? boardItems[0].boardId : null;
+
+    // Slack設定を取得（ボード専用 > チーム全体）
+    let slackConfig: any[] = [];
+    if (boardId) {
+      const boardSlackConfig = await db
+        .select()
+        .from(boardSlackConfigs)
+        .where(
+          and(
+            eq(boardSlackConfigs.boardId, boardId),
+            eq(boardSlackConfigs.isEnabled, true),
+          ),
+        )
+        .limit(1);
+
+      if (boardSlackConfig.length > 0) {
+        slackConfig = boardSlackConfig;
+      }
+    }
+
+    if (slackConfig.length === 0) {
+      const teamSlackConfig = await db
+        .select()
+        .from(teamSlackConfigs)
+        .where(
+          and(
+            eq(teamSlackConfigs.teamId, teamId),
+            eq(teamSlackConfigs.isEnabled, true),
+          ),
+        )
+        .limit(1);
+
+      slackConfig = teamSlackConfig;
+    }
+
+    if (slackConfig.length === 0) {
+      return; // Slack設定なし
+    }
+
+    // Webhook URLを復号化
+    const encryptionKey = env?.ENCRYPTION_KEY;
+    let webhookUrl = slackConfig[0].webhookUrl;
+
+    if (encryptionKey && hasEncryptionKey(env)) {
+      const decrypted = await decryptWebhookUrl(webhookUrl, encryptionKey);
+      if (!decrypted.startsWith("https://hooks.slack.com/")) {
+        return;
+      }
+      webhookUrl = decrypted;
+    }
+
+    // 担当者の表示名を取得
+    const assigneeMember = await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, assigneeId)),
+      )
+      .limit(1);
+
+    const assigneeName =
+      assigneeMember.length > 0
+        ? assigneeMember[0].displayName || "Unknown"
+        : "Unknown";
+
+    // チーム情報を取得
+    const teamData = await db
+      .select()
+      .from(teams)
+      .where(eq(teams.id, teamId))
+      .limit(1);
+
+    const teamCustomUrl =
+      teamData.length > 0 ? teamData[0].customUrl : String(teamId);
+
+    // ボードslugを取得
+    let boardSlug: string | null = null;
+    if (boardId) {
+      const board = await db
+        .select({ slug: teamBoards.slug })
+        .from(teamBoards)
+        .where(eq(teamBoards.id, boardId))
+        .limit(1);
+
+      if (board.length > 0) {
+        boardSlug = board[0].slug;
+      }
+    }
+
+    // リンクURLを生成
+    const appBaseUrl = env?.FRONTEND_URL || "https://petaboo.vercel.app";
+    const linkUrl = boardSlug
+      ? `${appBaseUrl}/team/${teamCustomUrl}?board=${boardSlug}&task=${taskDisplayId}`
+      : `${appBaseUrl}/team/${teamCustomUrl}`;
+
+    // 通知メッセージを送信
+    const message = formatAssigneeNotification(
+      assigneeName,
+      assignerName,
+      taskTitle,
+      linkUrl,
+    );
+
+    await sendSlackNotification(webhookUrl, message);
+  } catch (error) {
+    console.error("❌ Assignee Slack notification failed:", error);
+  }
 }
 
 // GET /teams/:teamId/tasks（チームタスク一覧取得）
@@ -428,6 +570,38 @@ app.openapi(
       targetTitle: title,
     });
 
+    // 担当者が設定された場合、通知を作成
+    // 条件: 自分以外を担当者に設定した場合のみ
+    if (
+      normalizedAssigneeId !== null &&
+      normalizedAssigneeId !== auth.userId // 自分自身への設定は通知しない
+    ) {
+      await db.insert(teamNotifications).values({
+        teamId,
+        userId: normalizedAssigneeId,
+        type: "assignee",
+        sourceType: "task",
+        sourceId: result[0].id,
+        targetType: "task",
+        targetDisplayId: displayId,
+        actorUserId: auth.userId,
+        message: `${member.displayName || "誰か"}さんがあなたを担当者に設定しました`,
+        isRead: 0,
+        createdAt: Date.now(),
+      });
+
+      // Slack通知を送信
+      await sendAssigneeSlackNotification(
+        db,
+        c.env,
+        teamId,
+        normalizedAssigneeId,
+        member.displayName || "誰か",
+        title,
+        displayId,
+      );
+    }
+
     return c.json(newTask, 200);
   },
 );
@@ -633,6 +807,41 @@ app.openapi(
         toStatus: rest.status,
         changedAt: Math.floor(Date.now() / 1000),
       });
+    }
+
+    // 担当者が変更された場合、通知を作成
+    // 条件: 自分以外を担当者に設定した場合のみ
+    const newAssigneeId = assigneeId === "" ? null : assigneeId;
+    if (
+      assigneeId !== undefined &&
+      newAssigneeId !== existingTask.assigneeId &&
+      newAssigneeId !== null &&
+      newAssigneeId !== auth.userId // 自分自身への設定は通知しない
+    ) {
+      await db.insert(teamNotifications).values({
+        teamId,
+        userId: newAssigneeId,
+        type: "assignee",
+        sourceType: "task",
+        sourceId: id,
+        targetType: "task",
+        targetDisplayId: existingTask.displayId,
+        actorUserId: auth.userId,
+        message: `${member.displayName || "誰か"}さんがあなたを担当者に設定しました`,
+        isRead: 0,
+        createdAt: Date.now(),
+      });
+
+      // Slack通知を送信
+      await sendAssigneeSlackNotification(
+        db,
+        c.env,
+        teamId,
+        newAssigneeId as string,
+        member.displayName || "誰か",
+        existingTask.title,
+        existingTask.displayId,
+      );
     }
 
     // 更新後のタスクを取得して返す

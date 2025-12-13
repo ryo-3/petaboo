@@ -4,10 +4,19 @@ import { Memo } from "@/src/types/memo";
 import { Task } from "@/src/types/task";
 import type { TaskTabType } from "@/src/config/taskTabConfig";
 import { validatePanelToggle } from "@/src/utils/panel-helpers";
+import { useTabState } from "@/src/contexts/tab-state-context";
 
 export function useBoardState() {
   const router = useRouter();
   const pathname = usePathname();
+
+  // TabStateContextからボード用タブ状態を取得
+  const {
+    boardTaskTab: activeTaskTab,
+    setBoardTaskTab: setActiveTaskTab,
+    boardMemoTab: activeMemoTab,
+    setBoardMemoTab: setActiveMemoTab,
+  } = useTabState();
 
   // デスクトップ判定（768px以上）
   const [isDesktop, setIsDesktop] = useState(true);
@@ -21,43 +30,6 @@ export function useBoardState() {
     return () => window.removeEventListener("resize", checkDesktop);
   }, []);
 
-  // タブ状態（sessionStorageから復元）
-  const [activeTaskTab, setActiveTaskTabInternal] = useState<TaskTabType>(
-    () => {
-      if (typeof window !== "undefined") {
-        const saved = sessionStorage.getItem("activeTaskTab");
-        if (
-          saved &&
-          ["todo", "in_progress", "checking", "completed", "deleted"].includes(
-            saved,
-          )
-        ) {
-          return saved as TaskTabType;
-        }
-      }
-      return "todo";
-    },
-  );
-
-  // PETABOO-55: タブ変更をログ出力するラッパー + sessionStorage保存
-  const setActiveTaskTab = useCallback(
-    (newTab: TaskTabType | ((prev: TaskTabType) => TaskTabType)) => {
-      setActiveTaskTabInternal((prev) => {
-        const next = typeof newTab === "function" ? newTab(prev) : newTab;
-        if (prev !== next) {
-          // sessionStorageに保存
-          if (typeof window !== "undefined") {
-            sessionStorage.setItem("activeTaskTab", next);
-          }
-        }
-        return next;
-      });
-    },
-    [],
-  );
-  const [activeMemoTab, setActiveMemoTab] = useState<"normal" | "deleted">(
-    "normal",
-  );
   const [showTabText, setShowTabText] = useState(true);
 
   // パネル状態
@@ -288,16 +260,22 @@ export function useBoardState() {
   );
 
   // タスクタブ切り替え時の処理
-  const handleTaskTabChange = useCallback((newTab: TaskTabType) => {
-    setActiveTaskTab(newTab);
-    // 選択解除は行わない（タブ切り替えで選択状態は保持）
-  }, []);
+  const handleTaskTabChange = useCallback(
+    (newTab: TaskTabType) => {
+      setActiveTaskTab(newTab);
+      // 選択解除は行わない（タブ切り替えで選択状態は保持）
+    },
+    [setActiveTaskTab],
+  );
 
   // メモタブ切り替え時の処理
-  const handleMemoTabChange = useCallback((newTab: "normal" | "deleted") => {
-    setActiveMemoTab(newTab);
-    // 選択解除は行わない（タブ切り替えで選択状態は保持）
-  }, []);
+  const handleMemoTabChange = useCallback(
+    (newTab: "normal" | "deleted") => {
+      setActiveMemoTab(newTab);
+      // 選択解除は行わない（タブ切り替えで選択状態は保持）
+    },
+    [setActiveMemoTab],
+  );
 
   // 一覧でのアイテム選択切り替え
   const handleToggleItemSelection = useCallback((itemId: number) => {

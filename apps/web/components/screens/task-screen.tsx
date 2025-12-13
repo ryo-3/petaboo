@@ -16,6 +16,7 @@ import { useDeletionLid } from "@/src/hooks/use-deletion-lid";
 import { useItemDeselect } from "@/src/hooks/use-item-deselect";
 import { useUnifiedRestoration } from "@/src/hooks/use-unified-restoration";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useTabState } from "@/src/contexts/tab-state-context";
 import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
@@ -322,7 +323,81 @@ function TaskScreen({
   selectedTaskRef.current = selectedTask;
   selectedDeletedTaskRef.current = selectedDeletedTask;
 
+  // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
+  // 通常タスクと削除済みタスクの両方のロード完了を待つ（チーム・個人両方対応）
+  const needsUrlRestore =
+    initialTaskId &&
+    !selectedTask &&
+    !selectedDeletedTask &&
+    (taskLoading || deletedTasksLoading);
+  const isFullyLoaded = !needsUrlRestore;
+
+  // タグ管理モーダルの状態
+  const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
+    useState(false);
+
+  // 担当者一括設定モーダル（Context経由）
+  const bulkAssigneeContext = useBulkAssigneeSafe();
+
+  // 削除ボタンの参照
+  const deleteButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 復元ボタンの参照
+  const restoreButtonRef = useRef<HTMLButtonElement>(null);
+
+  // 削除完了時に蓋を閉じる処理
+  useDeletionLid(() => setIsRightLidOpen(false));
+
+  // アニメーション状態
+  const [isDeleting, setIsDeleting] = useState(false);
+  // 蓋アニメーション状態
+  const [isLidOpen, setIsLidOpen] = useState(false);
+  const [, setIsRightLidOpen] = useState(false);
+
+  // 復元の状態
+  const [isRestoring, setIsRestoring] = useState(false);
+  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
+  const [isIndividualRestoring, setIsIndividualRestoring] = useState(false);
+
+  // CSVインポートモーダルの状態
+  const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
+  const handleCsvImport = useCallback(() => {
+    setIsCsvImportModalOpen(true);
+  }, []);
+
+  // 共通screen状態管理（画面モードのみ）
+  const {
+    screenMode: taskScreenMode,
+    setScreenMode: setTaskScreenModeInternal,
+  } = useScreenState(
+    { type: "task", defaultActiveTab: "todo", defaultColumnCount: 2 },
+    "list" as TaskScreenMode,
+    selectedTask,
+    selectedDeletedTask,
+    preferences || undefined,
+  );
+
+  // タブ状態管理（TabStateContextから取得）
+  const { taskListTab: activeTab, setTaskListTab: setActiveTab } =
+    useTabState();
+
+  // デバッグログ
+  console.log(
+    "[TaskScreen] activeTab:",
+    activeTab,
+    "selectedTask:",
+    selectedTask?.id,
+    "selectedTask.status:",
+    selectedTask?.status,
+  );
+
+  // URL からの初期タスク選択（useTabStateの後に配置）
   useEffect(() => {
+    // ボード詳細から呼び出された場合はURL復元をスキップ（ボード内の選択は別処理）
+    if (excludeBoardId) {
+      return;
+    }
+
     if (initialTaskId) {
       const isTargetTask = (task: Task | DeletedTask) => {
         const ids = [
@@ -394,80 +469,11 @@ function TaskScreen({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialTaskId, tasks, deletedTasks]);
+  }, [initialTaskId, tasks, deletedTasks, excludeBoardId]);
 
-  // URLからの復元が必要な場合（URLパラメータあり＆選択なし＆リストロード中）のみローディング表示
-  // 通常タスクと削除済みタスクの両方のロード完了を待つ（チーム・個人両方対応）
-  const needsUrlRestore =
-    initialTaskId &&
-    !selectedTask &&
-    !selectedDeletedTask &&
-    (taskLoading || deletedTasksLoading);
-  const isFullyLoaded = !needsUrlRestore;
-
-  // タグ管理モーダルの状態
-  const [isTagManagementModalOpen, setIsTagManagementModalOpen] =
-    useState(false);
-
-  // 担当者一括設定モーダル（Context経由）
-  const bulkAssigneeContext = useBulkAssigneeSafe();
-
-  // 削除ボタンの参照
-  const deleteButtonRef = useRef<HTMLButtonElement>(null);
-
-  // 復元ボタンの参照
-  const restoreButtonRef = useRef<HTMLButtonElement>(null);
-
-  // 削除完了時に蓋を閉じる処理
-  useDeletionLid(() => setIsRightLidOpen(false));
-
-  // アニメーション状態
-  const [isDeleting, setIsDeleting] = useState(false);
-  // 蓋アニメーション状態
-  const [isLidOpen, setIsLidOpen] = useState(false);
-  const [, setIsRightLidOpen] = useState(false);
-
-  // 復元の状態
-  const [isRestoring, setIsRestoring] = useState(false);
-  const [isRestoreLidOpen, setIsRestoreLidOpen] = useState(false);
-  const [isIndividualRestoring, setIsIndividualRestoring] = useState(false);
-
-  // CSVインポートモーダルの状態
-  const [isCsvImportModalOpen, setIsCsvImportModalOpen] = useState(false);
-  const handleCsvImport = useCallback(() => {
-    setIsCsvImportModalOpen(true);
-  }, []);
-
-  // 共通screen状態管理（画面モード + タブのみ）
-  const {
-    screenMode: taskScreenMode,
-    setScreenMode: setTaskScreenModeInternal,
-    activeTab,
-    setActiveTab,
-  } = useScreenState(
-    { type: "task", defaultActiveTab: "todo", defaultColumnCount: 2 },
-    "list" as TaskScreenMode,
-    selectedTask,
-    selectedDeletedTask,
-    preferences || undefined,
-  );
-
-  // 選択中のタスクのステータスが変わった場合、タブを自動切り替え
-  // （エディターでステータス変更→保存後にキャッシュ更新で発火）
-  useEffect(() => {
-    if (selectedTask && selectedTask.status) {
-      const taskStatus = selectedTask.status as
-        | "todo"
-        | "in_progress"
-        | "checking"
-        | "completed";
-      if (taskStatus && activeTab !== taskStatus && activeTab !== "deleted") {
-        setActiveTab(taskStatus);
-      }
-    }
-    // selectedTaskが変更された時のみ実行（activeTabを依存配列から除外してハイドレーションエラー回避）
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedTask, setActiveTab]);
+  // 注意: 以前はselectedTaskのステータスに連動してタブを変更するuseEffectがあったが、
+  // 画面遷移時に前のタスクのステータスでタブが上書きされる問題（PETABOO-87）があったため削除。
+  // タブの切り替えはユーザーの明示的な操作（タブクリック）またはURL復元時のみ行う。
 
   // パネル表示状態管理（チームモード用）
   const getInitialPanelState = (
@@ -817,7 +823,7 @@ function TaskScreen({
 
   // タブ変更ハンドラー（useTabChangeをトップレベルで呼び出し）
   const tabChangeHandler = useTabChange({
-    setActiveTab,
+    setActiveTab: (tab: string) => setActiveTab(tab as typeof activeTab),
     setScreenMode: (mode: string) => {
       setTaskScreenMode(mode as TaskScreenMode);
       onClearSelection?.();
@@ -918,7 +924,7 @@ function TaskScreen({
       deletedItems: deletedTasks || null,
       selectedDeletedItem: selectedDeletedTask || null,
       onSelectDeletedItem: onSelectDeletedTask,
-      setActiveTab,
+      setActiveTab: (tab: string) => setActiveTab(tab as typeof activeTab),
       setScreenMode: (mode: string) =>
         setTaskScreenMode(mode as TaskScreenMode),
       teamMode,

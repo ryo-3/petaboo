@@ -21,6 +21,7 @@ import {
 } from "@/src/hooks/use-memos";
 import { useRightEditorDelete } from "@/src/hooks/use-right-editor-delete";
 import { useScreenState } from "@/src/hooks/use-screen-state";
+import { useTabState } from "@/src/contexts/tab-state-context";
 import { useMultiSelection } from "@/src/hooks/use-multi-selection";
 import { useSelectAll } from "@/src/hooks/use-select-all";
 import { useSelectionHandlers } from "@/src/hooks/use-selection-handlers";
@@ -333,13 +334,8 @@ function MemoScreen({
   // 統一削除・復元API（最上位から受け取り）
   const operations = unifiedOperations;
 
-  // 共通screen状態管理（画面モード + タブのみ）
-  const {
-    screenMode,
-    setScreenMode: setMemoScreenMode,
-    activeTab,
-    setActiveTab,
-  } = useScreenState(
+  // 共通screen状態管理（画面モードのみ）
+  const { screenMode, setScreenMode: setMemoScreenMode } = useScreenState(
     { type: "memo", defaultActiveTab: "normal", defaultColumnCount: 4 },
     "list" as MemoScreenMode,
     selectedMemo,
@@ -347,6 +343,10 @@ function MemoScreen({
     preferences || undefined,
   );
   const memoScreenMode = screenMode as MemoScreenMode;
+
+  // タブ状態管理（TabStateContextから取得）
+  const { memoListTab: activeTab, setMemoListTab: setActiveTab } =
+    useTabState();
 
   const getInitialPanelState = (
     key: "showListPanel" | "showDetailPanel" | "showCommentPanel",
@@ -698,7 +698,7 @@ function MemoScreen({
       deletedItems: deletedMemos || null,
       selectedDeletedItem: selectedDeletedMemo || null,
       onSelectDeletedItem: onSelectDeletedMemo,
-      setActiveTab,
+      setActiveTab: (tab: string) => setActiveTab(tab as typeof activeTab),
       setScreenMode: (mode: string) =>
         setMemoScreenMode(mode as MemoScreenMode),
       teamMode,
@@ -819,13 +819,13 @@ function MemoScreen({
         setMemoScreenMode("list");
       }
 
-      // activeTabを更新
-      setActiveTab(newTab);
+      // activeTabを更新（型キャスト）
+      setActiveTab(newTab as typeof activeTab);
 
       // 2. 状態更新完了後に表示を切り替え
       Promise.resolve().then(() => {
         setTimeout(() => {
-          setDisplayTab(newTab);
+          setDisplayTab(newTab as typeof activeTab);
         }, 0);
       });
     },

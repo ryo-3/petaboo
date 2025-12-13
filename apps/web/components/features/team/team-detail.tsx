@@ -45,6 +45,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTeamDetail as useTeamDetailContext } from "@/src/contexts/team-detail-context";
 import { useNavigation } from "@/src/contexts/navigation-context";
+import { useTabState } from "@/src/contexts/tab-state-context";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useTeamComments } from "@/src/hooks/use-team-comments";
 import { useToast } from "@/src/contexts/toast-context";
@@ -82,6 +83,9 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // 楽観的更新用（サイドバーアイコンを即座に切り替え）
   const { setOptimisticMode } = useNavigation();
+
+  // タブ状態管理（画面遷移時にリセット用）
+  const { resetTaskListTab, resetMemoListTab } = useTabState();
 
   // 🛡️ ページ可視性をContextから取得
   const { isVisible: isPageVisible } = usePageVisibility();
@@ -154,6 +158,10 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
 
   // TaskScreenの作成モード状態を監視
   const [isTaskCreateMode, setIsTaskCreateMode] = useState(false);
+
+  // サイドバーからの遷移フラグ（URL復元をスキップするため）
+  const [skipTaskUrlRestore, setSkipTaskUrlRestore] = useState(false);
+  const [skipMemoUrlRestore, setSkipMemoUrlRestore] = useState(false);
 
   // 🎯 統一フック（チーム用）- 最上位で1つだけ作成
   const teamMemoOperations = useUnifiedItemOperations({
@@ -568,11 +576,38 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       // 🛡️ URL逆流防止: 期待値を記録
       pendingTabRef.current = tab;
 
+      // 🚀 サイドバーからの遷移時は、先に選択をクリア（タブリセット前に実行）
+      // これにより、TaskScreen等がレンダリングされる前に選択状態がクリアされ、
+      // 旧選択アイテムのステータスでタブが上書きされる問題を防ぐ
+      if (options?.fromSidebar) {
+        if (tab === "memos") {
+          clearSelections({ memo: true });
+        }
+        if (tab === "tasks") {
+          clearSelections({ task: true });
+        }
+      }
+
       // 🚀 楽観的更新：サイドバーアイコンを即座に切り替え
+      // 画面遷移時にタブをリセット（PETABOO-87対応）
+      console.log(
+        "[handleTabChange] tab:",
+        tab,
+        "fromSidebar:",
+        options?.fromSidebar,
+      );
       if (tab === "memos") {
         setOptimisticMode("memo");
+        console.log("[handleTabChange] resetMemoListTab called");
+        resetMemoListTab();
+        // サイドバーからの遷移時はURL復元をスキップ
+        setSkipMemoUrlRestore(true);
       } else if (tab === "tasks") {
         setOptimisticMode("task");
+        console.log("[handleTabChange] resetTaskListTab called");
+        resetTaskListTab();
+        // サイドバーからの遷移時はURL復元をスキップ
+        setSkipTaskUrlRestore(true);
       } else if (tab === "boards") {
         setOptimisticMode("board");
       } else {
@@ -624,10 +659,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       const baseParams = remainingParams.join("&");
 
       // タブ切り替え時に選択状態をクリア
-      if (tab !== "memos") {
+      // サイドバーからの遷移時は、同じ種類のタブでもクリア（ボード詳細での選択をクリアするため）
+      if (tab !== "memos" || options?.fromSidebar) {
         clearSelections({ memo: true });
       }
-      if (tab !== "tasks") {
+      if (tab !== "tasks" || options?.fromSidebar) {
         clearSelections({ task: true });
       }
 
@@ -666,6 +702,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
       setActiveTabContext,
       setOptimisticMode,
       clearSelections,
+      resetTaskListTab,
+      resetMemoListTab,
     ],
   );
 
@@ -816,6 +854,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // 新規作成状態をクリア
     setIsCreatingMemo(false);
 
+    // メモ選択時はサイドバー遷移スキップフラグをリセット（URL復元を再有効化）
+    if (memo !== null) {
+      setSkipMemoUrlRestore(false);
+    }
+
     // URLを更新
     const params = new URLSearchParams(searchParams.toString());
     // 旧形式のパラメータを削除
@@ -849,6 +892,8 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
     // task=nullの時は新規作成中の可能性があるのでクリアしない
     if (task !== null) {
       setIsCreatingTask(false);
+      // サイドバー遷移スキップフラグをリセット（タスク選択でURL復元を再有効化）
+      setSkipTaskUrlRestore(false);
     }
 
     // URLを更新
@@ -1435,7 +1480,7 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                   setSelectedDeletedMemo(null);
                   setIsCreatingMemo(false);
                 }}
-                initialMemoId={getMemoIdFromURL()}
+                initialMemoId={skipMemoUrlRestore ? null : getMemoIdFromURL()}
                 teamMembers={team.members || []}
                 // 統一フックを渡す
                 unifiedOperations={teamMemoOperations}
@@ -1493,7 +1538,11 @@ export function TeamDetail({ customUrl }: TeamDetailProps) {
                 onScreenModeChange={(mode) => {
                   setIsTaskCreateMode(mode === "create");
                 }}
-                initialTaskId={isTaskCreateMode ? null : getTaskIdFromURL()}
+                initialTaskId={
+                  isTaskCreateMode || skipTaskUrlRestore
+                    ? null
+                    : getTaskIdFromURL()
+                }
                 teamMembers={team.members || []}
                 // 統一フックを渡す
                 unifiedOperations={teamTaskOperations}

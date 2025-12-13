@@ -9,6 +9,7 @@ import { UserPreferencesProvider } from "@/src/contexts/user-preferences-context
 import { getServerUserPreferences } from "@/src/lib/server-preferences";
 import { ViewSettingsProvider } from "@/src/contexts/view-settings-context";
 import { HeaderControlPanelProvider } from "@/src/contexts/header-control-panel-context";
+import { TabStateProvider } from "@/src/contexts/tab-state-context";
 import { UserInitializer } from "@/components/auth/user-initializer";
 import { PageVisibilityProvider } from "@/src/contexts/PageVisibilityContext";
 import { LogCleaner } from "@/components/dev/log-cleaner";
@@ -62,10 +63,12 @@ export default async function RootLayout({
               <ViewSettingsProvider userId={1}>
                 <ToastProvider>
                   <HeaderControlPanelProvider>
-                    {clerkPublishableKey && <UserInitializer />}
-                    <LogCleaner />
-                    {children}
-                    <ToastContainer />
+                    <TabStateProvider>
+                      {clerkPublishableKey && <UserInitializer />}
+                      <LogCleaner />
+                      {children}
+                      <ToastContainer />
+                    </TabStateProvider>
                   </HeaderControlPanelProvider>
                 </ToastProvider>
               </ViewSettingsProvider>

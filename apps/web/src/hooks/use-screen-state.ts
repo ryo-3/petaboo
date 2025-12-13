@@ -3,7 +3,7 @@ import type { UserPreferences } from "@/src/contexts/user-preferences-context";
 
 interface UseScreenStateConfig {
   type: "memo" | "task";
-  defaultActiveTab: string;
+  defaultActiveTab: string; // 後方互換性のため残す（実際には使われない）
   defaultColumnCount: number; // 後方互換性のため残す（実際には使われない）
 }
 
@@ -11,23 +11,17 @@ interface ScreenStateReturn<T extends string> {
   // Screen mode
   screenMode: T;
   setScreenMode: (mode: T) => void;
-
-  // Tab state
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
 }
 
 export function useScreenState<T extends string>(
-  config: UseScreenStateConfig,
+  _config: UseScreenStateConfig,
   initialScreenMode: T,
   selectedItem?: unknown,
   selectedDeletedItem?: unknown,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  preferences?: UserPreferences,
+  _preferences?: UserPreferences,
 ): ScreenStateReturn<T> {
-  // Basic state: 画面モード + タブ管理のみ
+  // Basic state: 画面モードのみ管理（タブはTabStateContextで管理）
   const [screenMode, setScreenMode] = useState<T>(initialScreenMode);
-  const [activeTab, setActiveTab] = useState(config.defaultActiveTab);
 
   // アイテムが選択されている場合は表示モードに、選択がクリアされた場合は一覧モードに
   useEffect(() => {
@@ -45,7 +39,5 @@ export function useScreenState<T extends string>(
   return {
     screenMode,
     setScreenMode,
-    activeTab,
-    setActiveTab,
   };
 }

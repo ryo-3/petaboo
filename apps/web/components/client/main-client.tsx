@@ -10,6 +10,7 @@ import { useUserPreferences } from "@/src/hooks/use-user-preferences";
 import type { DeletedMemo, Memo } from "@/src/types/memo";
 import type { DeletedTask, Task } from "@/src/types/task";
 import { useNavigation } from "@/src/contexts/navigation-context";
+import { useTabState } from "@/src/contexts/tab-state-context";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import BoardSettings from "@/components/features/board/board-settings";
@@ -71,6 +72,9 @@ function MainClient({
     setHandleMainSelectMemo,
     setHandleMainSelectTask,
   } = useNavigation();
+
+  // タブ状態管理（画面遷移時にリセット用）
+  const { resetTaskListTab, resetMemoListTab } = useTabState();
 
   // refs
   const boardScreenRef = useRef<BoardScreenRef>(null);
@@ -446,6 +450,12 @@ function MainClient({
     // メモ/タスク一覧に遷移する場合はボード詳細を閉じる
     if (mode === "memo" || mode === "task") {
       setShowingBoardDetail(false);
+    }
+    // 画面遷移時にタブをリセット（PETABOO-87対応）
+    if (mode === "task") {
+      resetTaskListTab();
+    } else if (mode === "memo") {
+      resetMemoListTab();
     }
     handleShowList(mode);
   };

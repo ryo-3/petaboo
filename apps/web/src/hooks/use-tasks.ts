@@ -9,6 +9,7 @@ import type {
 } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
 import { updateItemCache } from "@/src/lib/cache-utils";
+import { useTeamContext } from "@/src/contexts/team-context";
 
 // グローバル削除処理追跡（重複削除防止）- タスク用
 const activeTaskDeleteOperations = new Set<string>();
@@ -134,6 +135,7 @@ export function useUpdateTask(options?: {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
+  const { currentMember } = useTeamContext();
   const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
@@ -184,12 +186,27 @@ export function useUpdateTask(options?: {
         if (!oldTasks) return [updatedTask];
         return oldTasks.map((task) => {
           if (task.id === id) {
+            // ステータスがcompletedに変わった場合、completedBy情報を付与
+            const isBecomingCompleted =
+              teamMode &&
+              data.status === "completed" &&
+              task.status !== "completed";
+            const completedByInfo =
+              isBecomingCompleted && currentMember
+                ? {
+                    completedAt: Math.floor(Date.now() / 1000),
+                    completedBy: currentMember.userId,
+                    completedByName: currentMember.displayName,
+                    completedByAvatarColor: currentMember.avatarColor,
+                  }
+                : {};
+
             // APIが完全なタスクオブジェクトを返した場合はそれを使用
             if (
               updatedTask.title !== undefined &&
               updatedTask.description !== undefined
             ) {
-              return updatedTask;
+              return { ...updatedTask, ...completedByInfo };
             }
             // APIが不完全な場合は既存タスクを更新データでマージ
             const merged = {
@@ -224,6 +241,7 @@ export function useUpdateTask(options?: {
                   ? (data.boardCategoryId ?? null)
                   : (task.boardCategoryId ?? null),
               updatedAt: Math.floor(Date.now() / 1000),
+              ...completedByInfo,
             };
             return merged;
           }
@@ -241,6 +259,20 @@ export function useUpdateTask(options?: {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const updatedItems = oldData.items.map((item: any) => {
                 if (item.itemType === "task" && item.content?.id === id) {
+                  // ステータスがcompletedに変わった場合、completedBy情報を付与
+                  const isBecomingCompleted =
+                    data.status === "completed" &&
+                    item.content.status !== "completed";
+                  const completedByInfo =
+                    isBecomingCompleted && currentMember
+                      ? {
+                          completedAt: Math.floor(Date.now() / 1000),
+                          completedBy: currentMember.userId,
+                          completedByName: currentMember.displayName,
+                          completedByAvatarColor: currentMember.avatarColor,
+                        }
+                      : {};
+
                   return {
                     ...item,
                     content: {
@@ -286,6 +318,7 @@ export function useUpdateTask(options?: {
                           ? (data.boardCategoryId ?? null)
                           : (item.content.boardCategoryId ?? null),
                       updatedAt: Math.floor(Date.now() / 1000),
+                      ...completedByInfo,
                     },
                     updatedAt: Math.floor(Date.now() / 1000),
                   };

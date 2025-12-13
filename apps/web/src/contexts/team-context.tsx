@@ -9,7 +9,8 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
-import { useTeamDetail } from "@/src/hooks/use-team-detail";
+import { useTeamDetail, TeamMember } from "@/src/hooks/use-team-detail";
+import { useAuth } from "@clerk/nextjs";
 
 /**
  * チーム/個人モード判定を一元管理するContext
@@ -34,6 +35,8 @@ interface TeamContextValue {
   teamSlug: string | null;
   /** チーム情報取得中フラグ */
   isLoading: boolean;
+  /** 現在のユーザーのメンバー情報（チームモード時のみ） */
+  currentMember: TeamMember | null;
 }
 
 const TeamContext = createContext<TeamContextValue>({
@@ -41,6 +44,7 @@ const TeamContext = createContext<TeamContextValue>({
   teamId: null,
   teamSlug: null,
   isLoading: false,
+  currentMember: null,
 });
 
 interface TeamProviderProps {
@@ -56,6 +60,7 @@ interface TeamProviderProps {
 export function TeamProvider({ children }: TeamProviderProps) {
   const pathname = usePathname();
   const [teamSlugState, setTeamSlugState] = useState<string | null>(null);
+  const { userId } = useAuth();
 
   // URLからチームSlugを抽出（単一の信頼できるソース）
   const teamSlug = useMemo(() => {
@@ -78,14 +83,21 @@ export function TeamProvider({ children }: TeamProviderProps) {
 
   const teamId = teamDetail?.id || null;
 
+  // 現在のユーザーのメンバー情報を取得
+  const currentMember = useMemo(() => {
+    if (!teamDetail?.members || !userId) return null;
+    return teamDetail.members.find((m) => m.userId === userId) || null;
+  }, [teamDetail?.members, userId]);
+
   const value = useMemo(
     () => ({
       isTeamMode,
       teamId,
       teamSlug: teamSlugState,
       isLoading,
+      currentMember,
     }),
-    [isTeamMode, teamId, teamSlugState, isLoading],
+    [isTeamMode, teamId, teamSlugState, isLoading, currentMember],
   );
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

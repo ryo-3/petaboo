@@ -52,7 +52,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   isUploading = false,
 }: UseSimpleItemSaveOptions<T>) {
   // TeamContextからチーム情報を取得（propsより優先）
-  const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
+  const {
+    isTeamMode,
+    teamId: teamIdFromContext,
+    currentMember,
+  } = useTeamContext();
 
   // propsとContextを統合（Contextを優先、後方互換性のためpropsも許容）
   const teamMode = isTeamMode || teamModeProp;
@@ -421,6 +425,22 @@ export function useSimpleItemSave<T extends UnifiedItem>({
             });
           }
 
+          // ステータスがcompletedに変わった場合、completedBy情報を付与
+          const isBecomingCompleted =
+            itemType === "task" &&
+            teamMode &&
+            status === "completed" &&
+            initialStatus !== "completed";
+          const completedByInfo =
+            isBecomingCompleted && currentMember
+              ? {
+                  completedAt: Math.floor(Date.now() / 1000),
+                  completedBy: currentMember.userId,
+                  completedByName: currentMember.displayName,
+                  completedByAvatarColor: currentMember.avatarColor,
+                }
+              : {};
+
           updatedItem =
             itemType === "memo"
               ? ({
@@ -441,6 +461,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
                   categoryId: categoryId ?? null,
                   boardCategoryId: boardCategoryId ?? null,
                   updatedAt: Math.floor(Date.now() / 1000),
+                  ...completedByInfo,
                 } as T);
         } else {
           // 内容に変更がない場合は現在の値を維持
@@ -796,6 +817,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     onDeleteAndSelectNext,
     teamMode,
     teamId,
+    currentMember,
   ]);
 
   const handleSave = useCallback(async (): Promise<string | null> => {

@@ -1693,9 +1693,9 @@ function TaskEditor({
                 ここにドロップして画像を追加
               </div>
             )}
-            <div className="relative z-20 h-full flex flex-col">
+            <div className="relative z-20">
               <div className="flex-1 flex flex-col min-h-0 pl-2">
-                <div className="w-full pr-1 flex-1">
+                <div className="w-full pr-1">
                   <TiptapEditor
                     content={finalDescription}
                     onChange={(newContent) => {

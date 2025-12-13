@@ -236,7 +236,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
   if (editorOnly) {
     return (
       <div className="flex-1 flex flex-col min-h-0 pl-2">
-        <div className="w-full pr-1 flex-1">
+        <div className="w-full pr-1">
           <TiptapEditor
             content={description}
             onChange={(newContent) => {
@@ -375,7 +375,7 @@ const TaskForm = forwardRef<TaskFormHandle, TaskFormProps>((props, ref) => {
 
       {!editorOnly && (
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="w-full pr-1 flex-1">
+          <div className="w-full pr-1">
             <TiptapEditor
               content={description}
               onChange={(newContent) => {

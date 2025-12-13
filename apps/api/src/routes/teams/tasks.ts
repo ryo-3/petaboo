@@ -604,10 +604,6 @@ app.openapi(
         rest.boardCategoryId === existingTask.boardCategoryId) &&
       (assigneeId === undefined || assigneeId === existingTask.assigneeId);
 
-    console.log(
-      `📝 [タスク更新] id=${id}, isStatusOnlyChange=${isStatusOnlyChange}`,
-    );
-
     const updateData = {
       ...rest,
       ...(assigneeId !== undefined
@@ -754,8 +750,6 @@ app.openapi(
 
     // 論理削除
     try {
-      console.log(`🗑️ [タスク削除開始] id=${id} displayId="${task.displayId}"`);
-
       // deleted_atを設定して論理削除
       await db
         .update(teamTasks)
@@ -764,8 +758,6 @@ app.openapi(
           updatedAt: Math.floor(Date.now() / 1000),
         })
         .where(eq(teamTasks.id, id));
-
-      console.log(`💾 [論理削除完了] displayId="${task.displayId}"を保持`);
     } catch (error) {
       console.error("チームタスク削除エラー:", error);
       return c.json({ error: "Failed to delete team task" }, 500);
@@ -993,7 +985,6 @@ app.openapi(
 
       // deleted_atをNULLにして復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      console.log(`🔄 [タスク復元開始] displayId="${taskData.displayId}"`);
 
       await db
         .update(teamTasks)
@@ -1003,10 +994,6 @@ app.openapi(
         })
         .where(eq(teamTasks.id, taskData.id));
 
-      console.log(
-        `✅ [タスク復元UPDATE完了] id=${taskData.id} (displayIdは"${taskData.displayId}"のまま)`,
-      );
-
       // 復元されたタスクを作成者情報付きで取得
       const restoredTask = await db
         .select(getTeamTaskSelectFields())
@@ -1014,10 +1001,6 @@ app.openapi(
         .leftJoin(teamMembers, getTeamTaskMemberJoin())
         .where(eq(teamTasks.id, taskData.id))
         .get();
-
-      console.log(
-        `📤 [タスク復元API応答] displayId="${restoredTask?.displayId}"`,
-      );
 
       return c.json(restoredTask);
     } catch (error) {
@@ -1171,10 +1154,6 @@ app.openapi(
       if (deletedResult.length === 0) {
         return c.json({ error: "削除済みタスクが見つかりません" }, 404);
       }
-
-      console.log(
-        `🗑️ チームタスク完全削除成功: displayId=${displayId}, teamId=${teamId}`,
-      );
 
       return c.json({ success: true });
     } catch (error) {

@@ -1580,14 +1580,6 @@ export function createTeamBoardsAPI(app: AppType) {
     const { itemType } = c.req.valid("query");
     const db = c.get("db");
 
-    console.log("🗑️ [チームボードアイテム削除] リクエスト受信:", {
-      teamId,
-      boardId,
-      itemId,
-      itemType,
-      userId: auth.userId,
-    });
-
     try {
       // チームメンバーかどうか確認
       const memberCheck = await db
@@ -1602,7 +1594,6 @@ export function createTeamBoardsAPI(app: AppType) {
         .limit(1);
 
       if (memberCheck.length === 0) {
-        console.log("❌ チームメンバーではありません");
         return c.json({ error: "チームメンバーではありません" }, 403);
       }
 
@@ -1620,21 +1611,11 @@ export function createTeamBoardsAPI(app: AppType) {
         .limit(1);
 
       if (board.length === 0) {
-        console.log("❌ ボードが見つかりません:", {
-          boardId: parseInt(boardId),
-          teamId: parseInt(teamId),
-        });
         return c.json({ error: "ボードが見つかりません" }, 404);
       }
 
       // itemIdをdisplayIdとして直接使用（文字列のまま）
       const displayId = itemId;
-
-      console.log("🔍 削除対象アイテム検索:", {
-        boardId: parseInt(boardId),
-        itemType,
-        displayId,
-      });
 
       // 削除前に存在確認
       const existingItem = await db

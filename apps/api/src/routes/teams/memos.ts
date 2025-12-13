@@ -484,22 +484,11 @@ app.openapi(
 
     const { teamId, id } = c.req.valid("param");
 
-    console.log(
-      `🗑️ チームメモ削除リクエスト: teamId=${teamId}, id=${id}, userId=${auth.userId}`,
-    );
-
     // チームメンバー確認
     const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
-      console.log(
-        `❌ チームメンバー確認失敗: teamId=${teamId}, userId=${auth.userId}`,
-      );
       return c.json({ error: "Not a team member" }, 403);
     }
-
-    console.log(
-      `✅ チームメンバー確認成功: teamId=${teamId}, userId=${auth.userId}, memberRole=${member.role}`,
-    );
 
     // まず該当メモを取得
     const memo = await db
@@ -514,24 +503,11 @@ app.openapi(
       )
       .get();
 
-    console.log(`🔍 チームメモ検索結果:`, {
-      memo: memo
-        ? {
-            id: memo.id,
-            teamId: memo.teamId,
-            userId: memo.userId,
-            title: memo.title,
-          }
-        : null,
-    });
-
     if (!memo) {
       return c.json({ error: "Team memo not found" }, 404);
     }
 
     try {
-      console.log(`🗑️ [削除開始] id=${id} displayId="${memo.displayId}"`);
-
       // 論理削除（deleted_atを設定）
       await db
         .update(teamMemos)
@@ -540,10 +516,6 @@ app.openapi(
           updatedAt: Math.floor(Date.now() / 1000),
         })
         .where(eq(teamMemos.id, id));
-
-      console.log(
-        `✅ チームメモ削除成功: id=${id}, teamId=${teamId}, displayId="${memo.displayId}"`,
-      );
     } catch (error) {
       console.error("チームメモ削除エラー:", error);
       return c.json({ error: "Failed to delete memo" }, 500);
@@ -738,22 +710,11 @@ app.openapi(
 
     const { teamId, displayId } = c.req.valid("param");
 
-    console.log(
-      `🔄 チームメモ復元リクエスト: teamId=${teamId}, displayId=${displayId}, userId=${auth.userId}`,
-    );
-
     // チームメンバー確認
     const member = await checkTeamMember(teamId, auth.userId, db);
     if (!member) {
-      console.log(
-        `❌ チームメンバー確認失敗: teamId=${teamId}, userId=${auth.userId}`,
-      );
       return c.json({ error: "Not a team member" }, 403);
     }
-
-    console.log(
-      `✅ チームメンバー確認成功: teamId=${teamId}, userId=${auth.userId}, memberRole=${member.role}`,
-    );
 
     try {
       // 削除済みメモを検索（元テーブルから）
@@ -769,29 +730,14 @@ app.openapi(
         )
         .limit(1);
 
-      console.log(`🔍 削除済みメモ検索結果:`, {
-        found: deletedMemo.length > 0,
-        teamId,
-        displayId,
-      });
-
       if (deletedMemo.length === 0) {
-        console.log(
-          `❌ 削除済みメモが見つからない: teamId=${teamId}, displayId=${displayId}`,
-        );
         return c.json({ error: "削除済みメモが見つかりません" }, 404);
       }
 
       const memoData = deletedMemo[0];
-      console.log(`📋 復元対象メモ:`, {
-        id: memoData.id,
-        title: memoData.title,
-        userId: memoData.userId,
-      });
 
       // deleted_atをNULLにして復元
       const currentTimestamp = Math.floor(Date.now() / 1000);
-      console.log(`🔄 [復元開始] displayId="${memoData.displayId}"`);
 
       await db
         .update(teamMemos)
@@ -801,10 +747,6 @@ app.openapi(
         })
         .where(eq(teamMemos.id, memoData.id));
 
-      console.log(
-        `✅ [復元UPDATE完了] id=${memoData.id} (displayIdは"${memoData.displayId}"のまま)`,
-      );
-
       // 復元されたメモを作成者情報付きで取得
       const restoredMemo = await db
         .select(getTeamMemoSelectFields())
@@ -813,23 +755,9 @@ app.openapi(
         .where(eq(teamMemos.id, memoData.id))
         .get();
 
-      console.log(`📤 [復元API応答] displayId="${restoredMemo?.displayId}"`);
-
-      console.log(
-        `✅ チームメモ復元成功: id=${memoData.id}, title=${memoData.title}, teamId=${teamId}`,
-      );
-
       return c.json(restoredMemo);
     } catch (error) {
       console.error("チームメモ復元エラー:", error);
-      console.error("復元エラーの詳細:", {
-        teamId,
-        displayId,
-        userId: auth.userId,
-        error,
-        errorMessage: error instanceof Error ? error.message : "不明なエラー",
-        stack: error instanceof Error ? error.stack : undefined,
-      });
       return c.json({ error: "Internal server error" }, 500);
     }
   },
@@ -979,10 +907,6 @@ app.openapi(
       if (deletedResult.length === 0) {
         return c.json({ error: "削除済みメモが見つかりません" }, 404);
       }
-
-      console.log(
-        `🗑️ チームメモ完全削除成功: displayId=${displayId}, teamId=${teamId}`,
-      );
 
       return c.json({ success: true });
     } catch (error) {

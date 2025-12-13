@@ -52,12 +52,10 @@ export function TabStateProvider({ children }: { children: ReactNode }) {
   const [boardMemoTab, setBoardMemoTabState] = useState<MemoTabType>("normal");
 
   const setTaskListTab = useCallback((tab: TaskTabType) => {
-    console.log("[TabStateContext] setTaskListTab:", tab);
     setTaskListTabState(tab);
   }, []);
 
   const resetTaskListTab = useCallback(() => {
-    console.log("[TabStateContext] resetTaskListTab -> todo");
     setTaskListTabState("todo");
   }, []);
 

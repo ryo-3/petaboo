@@ -35,7 +35,6 @@ declare global {
 // グローバル通知システムの初期化
 if (typeof global !== "undefined" && !global.userNotifications) {
   global.userNotifications = {};
-  console.log("🚀 グローバル通知システム初期化完了");
 }
 
 // チーム作成のスキーマ

@@ -97,6 +97,4 @@ teamsRoute.openapi(notificationCheckRoute, notificationCheck);
 // チーム用ボードAPIを追加
 createTeamBoardsAPI(teamsRoute);
 
-console.log("チームAPIルート登録完了 - 招待ルート:", inviteToTeamRoute.path);
-
 export default teamsRoute;

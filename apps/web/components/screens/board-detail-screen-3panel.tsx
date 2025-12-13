@@ -858,20 +858,25 @@ function BoardDetailScreen({
   });
 
   // 選択中のタスクをboardWithItemsの最新データで同期（一括更新後の反映用）
+  // selectedTask.idが変わった直後はスキップし、担当者変更時のみ発火
+  const lastSyncedTaskIdRef = useRef<number | null>(null);
   useEffect(() => {
     if (!selectedTask || !allTaskItems.length || !onSelectTask) return;
 
-    // 現在選択中のタスクを最新データから探す
+    // タスク選択が変わった直後はスキップ（ちらつき防止）
+    if (lastSyncedTaskIdRef.current !== selectedTask.id) {
+      lastSyncedTaskIdRef.current = selectedTask.id;
+      return;
+    }
+
     const updatedTaskItem = allTaskItems.find(
       (item) => (item.content as Task).id === selectedTask.id,
     );
+    if (!updatedTaskItem) return;
 
-    if (updatedTaskItem) {
-      const updatedTask = updatedTaskItem.content as Task;
-      // 担当者IDが変わった場合のみ更新（不要な再レンダリング防止）
-      if (updatedTask.assigneeId !== selectedTask.assigneeId) {
-        onSelectTask(updatedTask);
-      }
+    const updatedTask = updatedTaskItem.content as Task;
+    if (updatedTask.assigneeId !== selectedTask.assigneeId) {
+      onSelectTask(updatedTask);
     }
   }, [allTaskItems, selectedTask, onSelectTask]);
 

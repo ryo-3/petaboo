@@ -28,6 +28,7 @@ interface UseSimpleItemSaveOptions<T extends UnifiedItem> {
   teamMode?: boolean;
   teamId?: number;
   boardId?: number; // チームボードでのキャッシュ更新に使用
+  notificationUrl?: string; // 通知用: 現在のURL（クエリ部分）
   hasTagChanges?: boolean;
   pendingImages?: Array<unknown>;
   pendingDeletes?: Array<unknown>;
@@ -45,6 +46,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   teamMode: teamModeProp = false,
   teamId: teamIdProp,
   boardId,
+  notificationUrl,
   hasTagChanges = false,
   pendingImages = [],
   pendingDeletes = [],
@@ -417,6 +419,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               item.updatedAt !== null
                 ? { updatedAt: item.updatedAt }
                 : {}),
+              // 通知用: 現在のURL
+              ...(teamMode && notificationUrl ? { notificationUrl } : {}),
             };
 
             await updateTask.mutateAsync({
@@ -642,6 +646,8 @@ export function useSimpleItemSave<T extends UnifiedItem>({
               ...(teamMode ? { assigneeId: assigneeId ?? null } : {}),
               categoryId: categoryId ?? undefined,
               boardCategoryId: boardCategoryId ?? undefined,
+              // 通知用: 現在のURL
+              ...(teamMode && notificationUrl ? { notificationUrl } : {}),
             };
 
             createdItem = (await createTask.mutateAsync(createData)) as T;
@@ -818,6 +824,7 @@ export function useSimpleItemSave<T extends UnifiedItem>({
     teamMode,
     teamId,
     currentMember,
+    notificationUrl,
   ]);
 
   const handleSave = useCallback(async (): Promise<string | null> => {

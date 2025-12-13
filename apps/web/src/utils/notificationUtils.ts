@@ -12,33 +12,13 @@ export function getNotificationUrl(
 ): string | null {
   if (!teamName) return null;
 
-  const { targetType, targetDisplayId, boardDisplayId } = notification;
+  const { boardDisplayId } = notification;
 
-  if (!targetType || !targetDisplayId) {
-    return `/team/${teamName}`;
-  }
-
-  // boardDisplayIdがない場合はチームホームに戻る
-  if (!boardDisplayId) {
-    return `/team/${teamName}`;
-  }
-
-  const baseUrl = new URL(`/team/${teamName}`, "http://example.com");
-  baseUrl.searchParams.set("tab", "board");
-
+  // boardDisplayIdにはURLクエリが保存されている（例: "board=FFFF&task=4"）
   if (boardDisplayId) {
-    baseUrl.searchParams.set("slug", boardDisplayId);
-    if (/^\d+$/.test(boardDisplayId)) {
-      baseUrl.searchParams.set("boardId", boardDisplayId);
-    }
+    return `/team/${teamName}?${boardDisplayId}`;
   }
 
-  // ターゲット種別ごとのクエリ付与
-  if (targetType === "memo" && targetDisplayId) {
-    baseUrl.searchParams.set("memo", targetDisplayId);
-  } else if (targetType === "task" && targetDisplayId) {
-    baseUrl.searchParams.set("task", targetDisplayId);
-  }
-
-  return `${baseUrl.pathname}${baseUrl.search}`;
+  // フォールバック: チームホーム
+  return `/team/${teamName}`;
 }

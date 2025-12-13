@@ -80,6 +80,7 @@ const TeamTaskInputSchema = z.object({
   categoryId: z.number().optional(),
   boardCategoryId: z.number().optional(),
   assigneeId: z.string().nullable().optional(),
+  notificationUrl: z.string().optional(), // 通知用: 現在のURLクエリ
 });
 
 const TeamTaskUpdateSchema = z.object({
@@ -99,6 +100,7 @@ const TeamTaskUpdateSchema = z.object({
   boardCategoryId: z.number().optional(),
   assigneeId: z.string().nullable().optional(),
   updatedAt: z.number().optional(), // 楽観的ロック用
+  notificationUrl: z.string().optional(), // 通知用: 現在のURLクエリ
 });
 
 // チームメンバー確認のヘルパー関数
@@ -121,9 +123,10 @@ async function sendAssigneeSlackNotification(
   assignerName: string,
   taskTitle: string,
   taskDisplayId: string,
+  notificationUrl?: string, // フロントから渡されたURLクエリ
 ) {
   try {
-    // タスクがボードに所属しているか確認
+    // タスクがボードに所属しているか確認（Slack設定取得用）
     const boardItems = await db
       .select({ boardId: teamBoardItems.boardId })
       .from(teamBoardItems)
@@ -211,24 +214,10 @@ async function sendAssigneeSlackNotification(
     const teamCustomUrl =
       teamData.length > 0 ? teamData[0].customUrl : String(teamId);
 
-    // ボードslugを取得
-    let boardSlug: string | null = null;
-    if (boardId) {
-      const board = await db
-        .select({ slug: teamBoards.slug })
-        .from(teamBoards)
-        .where(eq(teamBoards.id, boardId))
-        .limit(1);
-
-      if (board.length > 0) {
-        boardSlug = board[0].slug;
-      }
-    }
-
-    // リンクURLを生成
+    // リンクURLを生成（フロントから渡されたURLクエリをそのまま使用）
     const appBaseUrl = env?.FRONTEND_URL || "https://petaboo.vercel.app";
-    const linkUrl = boardSlug
-      ? `${appBaseUrl}/team/${teamCustomUrl}?board=${boardSlug}&task=${taskDisplayId}`
+    const linkUrl = notificationUrl
+      ? `${appBaseUrl}/team/${teamCustomUrl}?${notificationUrl}`
       : `${appBaseUrl}/team/${teamCustomUrl}`;
 
     // 通知メッセージを送信
@@ -488,6 +477,7 @@ app.openapi(
       categoryId,
       boardCategoryId,
       assigneeId,
+      notificationUrl,
     } = parsed.data;
 
     const normalizedAssigneeId =
@@ -584,6 +574,7 @@ app.openapi(
         sourceId: result[0].id,
         targetType: "task",
         targetDisplayId: displayId,
+        boardDisplayId: notificationUrl || null, // URLクエリをそのまま保存
         actorUserId: auth.userId,
         message: `${member.displayName || "誰か"}さんがあなたを担当者に設定しました`,
         isRead: 0,
@@ -599,6 +590,7 @@ app.openapi(
         member.displayName || "誰か",
         title,
         displayId,
+        notificationUrl,
       );
     }
 
@@ -708,7 +700,12 @@ app.openapi(
     }
 
     // 楽観的ロック: updatedAt を抽出して競合チェック
-    const { updatedAt: clientUpdatedAt, assigneeId, ...rest } = parsed.data;
+    const {
+      updatedAt: clientUpdatedAt,
+      assigneeId,
+      notificationUrl,
+      ...rest
+    } = parsed.data;
 
     // ステータス変更履歴のため、既存タスクを取得
     const existingTask = await db
@@ -826,6 +823,7 @@ app.openapi(
         sourceId: id,
         targetType: "task",
         targetDisplayId: existingTask.displayId,
+        boardDisplayId: notificationUrl || null, // URLクエリをそのまま保存
         actorUserId: auth.userId,
         message: `${member.displayName || "誰か"}さんがあなたを担当者に設定しました`,
         isRead: 0,
@@ -841,6 +839,7 @@ app.openapi(
         member.displayName || "誰か",
         existingTask.title,
         existingTask.displayId,
+        notificationUrl,
       );
     }
 

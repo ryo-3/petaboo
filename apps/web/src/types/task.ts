@@ -48,6 +48,7 @@ export interface CreateTaskData {
   categoryId?: number | null;
   boardCategoryId?: number | null; // ボードカテゴリーID
   assigneeId?: string | null;
+  notificationUrl?: string; // 通知用: 現在のURL（クエリ部分）
 }
 
 export interface UpdateTaskData {
@@ -60,6 +61,7 @@ export interface UpdateTaskData {
   boardCategoryId?: number | null; // ボードカテゴリーID
   assigneeId?: string | null;
   updatedAt?: number; // 楽観的ロック用
+  notificationUrl?: string; // 通知用: 現在のURL（クエリ部分）
 }
 
 export type { TaskStatus } from "@/src/config/taskTabConfig";

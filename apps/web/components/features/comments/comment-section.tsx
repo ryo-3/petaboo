@@ -8,6 +8,7 @@ import {
 } from "@/src/hooks/use-team-comments";
 import { useAttachments } from "@/src/hooks/use-attachments";
 import { useAuth } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
 import type { TeamMember } from "@/src/hooks/use-team-detail";
 import {
   MoreVertical,
@@ -313,6 +314,10 @@ export default function CommentSection({
   const { userId: currentUserId, getToken } = useAuth();
   const { showToast } = useToast();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+
+  // 現在のURLクエリを取得（通知用）
+  const currentNotificationUrl = searchParams.toString() || undefined;
 
   // 画像添付用の状態
   const [pendingImages, setPendingImages] = useState<File[]>([]);
@@ -600,6 +605,7 @@ export default function CommentSection({
         content: newComment.trim() || " ", // 画像のみの場合は空白を入れる
         mentionedUserIds:
           mentionedUserIds.length > 0 ? mentionedUserIds : undefined,
+        notificationUrl: currentNotificationUrl, // 通知用: 現在のURL
       });
 
       // 画像をアップロード（コメントIDをoriginalIdとして使用）

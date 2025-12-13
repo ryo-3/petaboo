@@ -61,6 +61,7 @@ import type { Tag, Tagging } from "@/src/types/tag";
 import type { Board } from "@/src/types/board";
 import { useCallback, useEffect, useState, useMemo, memo, useRef } from "react";
 import type { DragEvent } from "react";
+import { useSearchParams } from "next/navigation";
 import { useDeletedTaskActions } from "./use-deleted-task-actions";
 import ShareUrlButton from "@/components/ui/buttons/share-url-button";
 import {
@@ -167,6 +168,10 @@ function TaskEditor({
 
   // NavigationContextからアップロード状態を管理
   const { setIsUploadingTask } = useNavigation();
+
+  // URLから現在のクエリパラメータを取得（通知用）
+  const searchParams = useSearchParams();
+  const currentNotificationUrl = searchParams.toString() || undefined;
 
   // TeamDetailContext経由でモバイルフッターに状態を公開
   const teamDetailContext = teamMode ? useTeamDetail() : null;
@@ -745,6 +750,7 @@ function TaskEditor({
     currentBoardIds,
     initialBoardId,
     boardId: initialBoardId, // チームボードキャッシュ更新用
+    notificationUrl: currentNotificationUrl, // 通知用: 現在のURL
     onDeleteAndSelectNext,
     teamMode,
     teamId,

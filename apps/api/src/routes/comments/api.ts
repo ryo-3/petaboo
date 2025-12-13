@@ -42,6 +42,7 @@ const TeamCommentInputSchema = z.object({
     .min(1)
     .max(1000, "コメントは1,000文字以内で入力してください"),
   mentionedUserIds: z.array(z.string()).optional(), // フロントから送信されたメンションuserIds
+  notificationUrl: z.string().optional(), // 通知用: 現在のURLクエリ
 });
 
 // チームメンバー確認のヘルパー関数
@@ -118,6 +119,7 @@ async function sendMentionNotificationToSlack(
   commenterDisplayName: string,
   db: any,
   env: any,
+  notificationUrl?: string, // フロントから渡されたURLクエリ
 ) {
   // メモ・タスクの場合、ボード所属チェックとボード専用Slack設定の優先確認
   let boardId: number | null = null;
@@ -331,11 +333,14 @@ async function sendMentionNotificationToSlack(
   const appBaseUrl = env?.FRONTEND_URL || "http://localhost:7593";
   let linkUrl: string;
 
-  if (boardSlug && (targetType === "memo" || targetType === "task")) {
-    // ボード内のメモ・タスク
+  // notificationUrlが渡されている場合はそのまま使用
+  if (notificationUrl) {
+    linkUrl = `${appBaseUrl}/team/${teamCustomUrl}?${notificationUrl}`;
+  } else if (boardSlug && (targetType === "memo" || targetType === "task")) {
+    // フォールバック: ボード内のメモ・タスク
     linkUrl = `${appBaseUrl}/team/${teamCustomUrl}/board/${boardSlug}/${targetType}/${targetIdentifier}`;
   } else {
-    // ボード外のメモ・タスク、またはボード自体
+    // フォールバック: ボード外のメモ・タスク、またはボード自体
     linkUrl = `${appBaseUrl}/team/${teamCustomUrl}/${targetType}/${targetIdentifier}`;
   }
 
@@ -541,6 +546,7 @@ export const postComment = async (c: any) => {
     boardId,
     content,
     mentionedUserIds: clientMentionedUserIds,
+    notificationUrl,
   } = body;
 
   // メンション解析（クライアントから送信されたものを優先、なければテキストから抽出）
@@ -575,40 +581,44 @@ export const postComment = async (c: any) => {
     })
     .returning();
 
-  // boardIdからboardDisplayIdを取得（メモ/タスクの場合）
-  let boardDisplayId: string | null = null;
-  if (boardId && targetType !== "board") {
-    const boards = await db
-      .select({
-        id: teamBoards.id,
-        slug: teamBoards.slug,
-      })
-      .from(teamBoards)
-      .where(eq(teamBoards.id, boardId))
-      .limit(1);
-
-    if (boards.length > 0) {
-      boardDisplayId = String(boards[0].id);
-    }
-  } else if (targetType === "board") {
-    // targetDisplayIdから取得
-    const boardIdNumeric = Number.parseInt(targetDisplayId, 10);
-    if (!Number.isNaN(boardIdNumeric)) {
+  // boardDisplayIdを決定（通知用）
+  // notificationUrlが渡されていればそれをそのまま使用（URLクエリがそのまま保存される）
+  // フォールバック: boardIdまたはtargetDisplayIdから取得
+  let boardDisplayId: string | null = notificationUrl || null;
+  if (!boardDisplayId) {
+    if (boardId && targetType !== "board") {
       const boards = await db
         .select({
           id: teamBoards.id,
           slug: teamBoards.slug,
         })
         .from(teamBoards)
-        .where(eq(teamBoards.id, boardIdNumeric))
+        .where(eq(teamBoards.id, boardId))
         .limit(1);
+
       if (boards.length > 0) {
         boardDisplayId = String(boards[0].id);
+      }
+    } else if (targetType === "board") {
+      // targetDisplayIdから取得
+      const boardIdNumeric = Number.parseInt(targetDisplayId, 10);
+      if (!Number.isNaN(boardIdNumeric)) {
+        const boards = await db
+          .select({
+            id: teamBoards.id,
+            slug: teamBoards.slug,
+          })
+          .from(teamBoards)
+          .where(eq(teamBoards.id, boardIdNumeric))
+          .limit(1);
+        if (boards.length > 0) {
+          boardDisplayId = String(boards[0].id);
+        } else {
+          boardDisplayId = targetDisplayId;
+        }
       } else {
         boardDisplayId = targetDisplayId;
       }
-    } else {
-      boardDisplayId = targetDisplayId;
     }
   }
 
@@ -648,6 +658,7 @@ export const postComment = async (c: any) => {
         commenterDisplayName,
         db,
         c.env,
+        notificationUrl,
       );
     } catch (error) {
       console.error("❌ Slack notification failed:", error);

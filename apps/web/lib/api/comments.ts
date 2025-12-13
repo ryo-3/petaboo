@@ -65,6 +65,7 @@ export interface CreateCommentInput {
   boardId?: number; // メモ/タスクが所属するボードID
   content: string;
   mentionedUserIds?: string[]; // フロントから送信されたメンションuserIds
+  notificationUrl?: string; // 通知用: 現在のURL（クエリ部分）
 }
 
 // コメント一覧取得

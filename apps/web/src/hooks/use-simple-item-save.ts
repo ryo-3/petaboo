@@ -8,7 +8,7 @@ import {
   useRemoveItemFromBoard,
 } from "@/src/hooks/use-boards";
 import { useQueryClient } from "@tanstack/react-query";
-import { useTeamContext } from "@/src/contexts/team-context";
+import { useTeamContextSafe } from "@/src/contexts/team-context";
 import { stripHtmlTags } from "@/src/utils/html";
 
 type UnifiedItem = Memo | Task;
@@ -52,11 +52,11 @@ export function useSimpleItemSave<T extends UnifiedItem>({
   isUploading = false,
 }: UseSimpleItemSaveOptions<T>) {
   // TeamContextからチーム情報を取得（propsより優先）
-  const {
-    isTeamMode,
-    teamId: teamIdFromContext,
-    currentMember,
-  } = useTeamContext();
+  // 個人モードではTeamProviderがないためuseTeamContextSafeを使用
+  const teamContext = useTeamContextSafe();
+  const isTeamMode = teamContext?.isTeamMode ?? false;
+  const teamIdFromContext = teamContext?.teamId ?? null;
+  const currentMember = teamContext?.currentMember ?? null;
 
   // propsとContextを統合（Contextを優先、後方互換性のためpropsも許容）
   const teamMode = isTeamMode || teamModeProp;

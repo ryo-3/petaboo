@@ -17,7 +17,7 @@ import { useRestoreTask } from "@/src/hooks/use-tasks";
 import { BoardItemWithContent, BoardWithItems } from "@/src/types/board";
 import { Memo, DeletedMemo } from "@/src/types/memo";
 import { Task, DeletedTask } from "@/src/types/task";
-import { useTeamContext } from "@/src/contexts/team-context";
+import { useTeamContextSafe } from "@/src/contexts/team-context";
 import { useTeamDetailSafe } from "@/src/contexts/team-detail-context";
 import { useUnsavedChangesGuard } from "@/src/hooks/use-unsaved-changes-guard";
 
@@ -103,7 +103,10 @@ export function useBoardOperations({
   teamId: teamIdProp,
 }: UseBoardOperationsProps): UseBoardOperationsReturn {
   // TeamContextからチーム情報を取得（propsより優先）
-  const { isTeamMode, teamId: teamIdFromContext } = useTeamContext();
+  // 個人モードではTeamProviderがないためuseTeamContextSafeを使用
+  const teamContext = useTeamContextSafe();
+  const isTeamMode = teamContext?.isTeamMode ?? false;
+  const teamIdFromContext = teamContext?.teamId ?? null;
   // TeamDetailContextから未保存チェック用refを取得（チーム側のみ）
   const teamDetailContext = useTeamDetailSafe();
 

@@ -9,7 +9,7 @@ import type {
 } from "@/src/types/task";
 import { useToast } from "@/src/contexts/toast-context";
 import { updateItemCache } from "@/src/lib/cache-utils";
-import { useTeamContext } from "@/src/contexts/team-context";
+import { useTeamContextSafe } from "@/src/contexts/team-context";
 
 // グローバル削除処理追跡（重複削除防止）- タスク用
 const activeTaskDeleteOperations = new Set<string>();
@@ -135,7 +135,9 @@ export function useUpdateTask(options?: {
   const queryClient = useQueryClient();
   const { getToken } = useAuth();
   const { showToast } = useToast();
-  const { currentMember } = useTeamContext();
+  // 個人モードではTeamProviderがないためuseTeamContextSafeを使用
+  const teamContext = useTeamContextSafe();
+  const currentMember = teamContext?.currentMember ?? null;
   const { teamMode = false, teamId, boardId } = options || {};
 
   return useMutation({
@@ -335,8 +337,64 @@ export function useUpdateTask(options?: {
         );
       }
 
-      // PETABOO-55: setQueryDataで楽観的更新済みなので、ボード全体の無効化は不要
-      // ボード詳細のアイテムキャッシュは上で既に更新済み
+      // 個人モードのボードアイテムキャッシュも楽観的更新（個人＋ボードID指定時）
+      if (!teamMode && boardId) {
+        queryClient.setQueryData(
+          ["boards", boardId, "items"],
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (oldData: any) => {
+            if (oldData?.items) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const updatedItems = oldData.items.map((item: any) => {
+                if (item.itemType === "task" && item.content?.id === id) {
+                  return {
+                    ...item,
+                    content: {
+                      ...item.content,
+                      title:
+                        data.title !== undefined
+                          ? data.title
+                          : item.content.title,
+                      description:
+                        data.description !== undefined
+                          ? data.description
+                          : item.content.description,
+                      status:
+                        data.status !== undefined
+                          ? data.status
+                          : item.content.status,
+                      priority:
+                        data.priority !== undefined
+                          ? data.priority
+                          : item.content.priority,
+                      dueDate:
+                        data.dueDate !== undefined
+                          ? data.dueDate
+                          : item.content.dueDate,
+                      categoryId:
+                        data.categoryId !== undefined
+                          ? (data.categoryId ?? null)
+                          : (item.content.categoryId ?? null),
+                      boardCategoryId:
+                        data.boardCategoryId !== undefined
+                          ? (data.boardCategoryId ?? null)
+                          : (item.content.boardCategoryId ?? null),
+                      updatedAt: Math.floor(Date.now() / 1000),
+                    },
+                    updatedAt: Math.floor(Date.now() / 1000),
+                  };
+                }
+                return item;
+              });
+              return {
+                ...oldData,
+                items: updatedItems,
+              };
+            }
+            return oldData;
+          },
+        );
+      }
     },
     onError: (error: Error & { status?: number; latestData?: Task }) => {
       if (error.status === 409 && error.latestData) {
